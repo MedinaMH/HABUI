@@ -1,0 +1,50 @@
+{% load i18n %}
+{% load static %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+<!DOCTYPE html>
+<html lang="{{ CURRENT_LANGUAGE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Inicio" %} | {% trans "Proyecto HABUI" %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/estilos_panel.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+</head>
+<body>
+
+<header class="encabezado">
+    <div class="header-top">
+        <!-- Selector de idioma  -->
+        <div class="language-switcher">
+            <span>{% trans "Idioma" %}:</span>
+            <form action="{% url 'set_language' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <select name="language" onchange="this.form.submit()">
+                    <option value="es" {% if CURRENT_LANGUAGE == 'es' %}selected{% endif %}>ES</option>
+                    <option value="en" {% if CURRENT_LANGUAGE == 'en' %}selected{% endif %}>EN</option>
+                </select>
+            </form>
+        </div>
+
+        <!-- Título centrado -->
+        <h1>{% trans "PROYECTO HABUI" %}</h1>
+
+    </div>
+</header>
+
+<main class="contenido">
+    <a href="{% url 'control_alimentos' %}" class="seccion">
+        <h2>{% trans "Módulo de Control" %}</h2>
+        <img src="{% static 'iconos/icono_pc.gif' %}"
+            alt="{% trans 'GIF del panel de control' %}"
+            class="icon-gif">
+        <h3>{% trans "Simula escenarios de riesgo, supervisa actividades y comunicación" %}</h3>
+    </a>
+</main>
+
+<script src="{% static 'js/bootstrap.bundle.js' %}"></script>
+</body>
+</html>

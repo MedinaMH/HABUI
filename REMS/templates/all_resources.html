@@ -1,0 +1,216 @@
+{% extends "estructura_base.html" %}
+{% load i18n %}
+{% block titulo %}REMS{% endblock %}
+{% block contenido %} 
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/estilos_view_all.css' %}">
+<script src="{% static 'js/d3.js' %}"></script>
+<script>
+    const TRANSLATIONS = {
+        // Estados genéricos para oxígeno, CO2, temperatura y humedad
+        optimal: "{% trans 'ÓPTIMO' %}",
+        warning: "{% trans 'ADVERTENCIA' %}",
+        critical: "{% trans 'CRÍTICO' %}",
+
+        // Estados para agua y energía
+        moderate: "{% trans 'MODERADO' %}",
+        low: "{% trans 'BAJO' %}",
+
+        // Alertas
+        critical_battery: "{% trans 'Nivel de batería crítico' %}",
+        low_battery: "{% trans 'Nivel de batería bajo' %}",
+        moderate_battery: "{% trans 'Nivel de batería moderado' %}",
+
+        critical_water: "{% trans 'Nivel de agua crítico' %}",
+        low_water: "{% trans 'Nivel de agua bajo' %}",
+        moderate_water: "{% trans 'Nivel de agua moderado' %}",
+
+        critical_air: "{% trans 'Calidad del aire crítica' %}",
+        disconnected_sensors: "{% trans 'Sensores desconectados' %}",
+
+        mild_thermal_discomfort: "{% trans 'Leve incomodidad térmica' %}",
+        cold_risk: "{% trans 'Riesgo fisiológico por frío' %}",
+        heat_risk: "{% trans 'Riesgo fisiológico por calor' %}",
+        humidity_warning: "{% trans 'Humedad fuera del rango ideal' %}",
+        low_humidity: "{% trans 'Humedad muy baja' %}",
+        high_humidity: "{% trans 'Humedad muy alta' %}",
+
+        connecting_websockets: "{% trans 'Conectando WebSockets...' %}",
+        all_sensors_connected: "{% trans 'Todos los sensores conectados' %}",
+        partially_connected_sensors: "{% trans 'Sensores parcialmente conectados' %}",
+        all_sensors_disconnected: "{% trans 'Todos los sensores desconectados' %}",
+        last_update: "{% trans 'Última actualización' %}",
+
+        sensor_battery: "{% trans 'Batería' %}",
+        sensor_water: "{% trans 'Agua' %}",
+        sensor_oxygen: "{% trans 'Oxígeno' %}",
+        sensor_co2: "{% trans 'CO2' %}",
+        sensor_temperature: "{% trans 'Temperatura' %}",
+        sensor_humidity: "{% trans 'Humedad' %}",
+        
+        thermal_stress_risk: "{% trans 'Riesgo fisiológico, estrés térmico' %}",
+        optimal_thermal_zone: "{% trans 'Zona de confort térmico humano óptimo' %}",
+
+        extreme_dryness_irritation: "{% trans 'Irritación respiratoria por sequedad extrema' %}",
+        respiratory_dryness_risk: "{% trans 'Riesgo de sequedad respiratoria' %}",
+        pathogen_comfort_balance: "{% trans 'Minimiza patógenos, maximiza confort respiratorio' %}",
+        microbial_growth_risk: "{% trans 'Riesgo de proliferación microbiana' %}",
+        mold_growth_risk: "{% trans 'Riesgo de crecimiento de moho e irritación respiratoria' %}",
+
+        air_quality_good: "{% trans 'BUENA' %}",
+        air_quality_moderate: "{% trans 'MODERADA' %}",
+        air_quality_critical: "{% trans 'CRÍTICA' %}"
+    };
+</script>
+
+<script src="{% static 'js/allrems.js' %}"></script>
+<!-- Aplicamos la clase monitoreo-container directamente al bloque principal -->
+<!-- <div class="dashboard-header">
+    <h1><i class="fas fa-tachometer-alt"></i> Sistema REMS - Monitoreo en Tiempo Real</h1>
+    <div class="status-indicators">
+        <span class="status online"><i class="fas fa-circle"></i> Conectado</span>
+        <span id="last-update">Última actualización: --:--:--</span>
+    </div>
+</div> -->
+
+<!-- PANEL DE ALERTAS -->
+<!-- <div class="alerts-panel">
+    <h3><i class="fas fa-exclamation-triangle"></i> Alertas Recientes</h3>
+    <div id="alerts-container">
+        <div class="alert-item info">
+            <i class="fas fa-info-circle"></i>
+            <span>Sistema REMS iniciado. Esperando datos de sensores...</span>
+            <span class="alert-time">00:00:00</span>
+        </div>
+    </div>
+</div> -->
+
+<div class="grid-layout">
+    <!-- BATERÍA  -->
+    <div class="resource-card bateria">
+        <div class="card-header">
+            <h2><i class="fas fa-battery-full"></i> {% trans "Nivel de Batería" %}</h2>
+        </div>
+        <div class="bateria-gauge-container">
+            <svg id="battery-svg" width="280" height="400"></svg>
+            <div id="battery-percentage-large" class="battery-percentage-large">--%</div>
+        </div>
+        <div class="card-footer">
+            <div class="stat">
+                <span class="stat-label">{% trans "Estado:" %}</span>
+                <span id="battery-status" class="stat-value">{% trans "Normal" %}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">{% trans "Actualizado:" %}</span>
+                <span id="battery-time" class="stat-value">--:--:--</span>
+            </div>
+        </div>
+    </div>
+    <!-- RECURSO 1: AGUA -->
+    <div class="resource-card agua">
+        <div class="card-header">
+            <h2><i class="fas fa-tint"></i> {% trans "Nivel de Agua" %}</h2>
+        </div>
+        <div class="agua-gauge-container">
+            <div id="tanque-agua"></div>
+        </div>
+        <div class="card-footer">
+            <div class="stat">
+                <span class="stat-label">{% trans "Estado:" %}</span>
+                <span id="agua-status" class="stat-value">{% trans "Normal" %}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">{% trans "Actualizado:" %}</span>
+                <span id="agua-time" class="stat-value">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECURSO 2: OXÍGENO - CONTENEDOR INDEPENDIENTE -->
+    <div class="resource-card oxigeno">
+        <div class="card-header">
+            <h2><i class="fas fa-lungs"></i>{% trans "Niveles de Oxígeno" %}</h2>
+        </div>
+        <div class="oxigeno-gauge-container">
+            <div id="oxigeno-gauge"></div>
+        </div>
+        <div class="card-footer">
+            <div class="stat">
+                <span class="stat-label">{% trans "Estado:" %}</span>
+                <span id="oxigeno-quality" class="stat-value">{% trans "Óptimo" %}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">{% trans "Actualizado:" %}</span>
+                <span id="oxigeno-time" class="stat-value">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECURSO 3: CO₂ - CONTENEDOR INDEPENDIENTE -->
+    <div class="resource-card co2">
+        <div class="card-header">
+            <h2><i class="fas fa-smog"></i>{% trans "Concentración de CO₂" %}</h2>
+        </div>
+        <div class="co2-gauge-container">
+            <div id="co2-gauge"></div>
+        </div>
+        <div class="card-footer">
+            <div class="stat">
+                <span class="stat-label">{% trans "Estado:" %}</span>
+                <span id="co2-concentration" class="stat-value">Normal</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">{% trans "Actualizado:" %}</span>
+                <span id="co2-time" class="stat-value">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECURSO 4: TEMPERATURA -->
+    <div class="resource-card temperatura">
+        <div class="card-header">
+            <h2><i class="fas fa-thermometer-half"></i>{% trans "Nivel de Temperatura" %}</h2>
+        </div>
+        <div class="temp-gauge-container">
+            <div id="temperatura-gauge"></div>
+        </div>
+        <div class="card-footer">
+            <div class="stat">
+                <span class="stat-label">{% trans "Estado:" %}</span>
+                <span id="temp-feeling" class="stat-value">{% trans "Agradable" %}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">{% trans "Actualizado:" %}</span>
+                <span id="temp-time" class="stat-value">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECURSO 5: HUMEDAD -->
+    <div class="resource-card humedad">
+        <div class="card-header">
+            <h2><i class="fas fa-cloud-rain"></i>{% trans "Niveles de Humedad" %}</h2>
+        </div>
+        <div class="hum-gauge-container">
+            <div id="humedad-gauge"></div>
+        </div>
+        <div class="card-footer">
+            <div class="stat">
+                <span class="stat-label">{% trans "Estado:" %}</span>
+                <span id="humidity-condition" class="stat-value">{% trans "Ideal" %}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">{% trans "Actualizado:" %}</span>
+                <span id="humidity-time" class="stat-value">--:--:--</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Indicador de conexión -->
+<div id="connection-status" class="connection-status connected" style="display: none;">
+    <i class="fas fa-circle"></i>
+    <span>{% trans "Conectando..." %}</span>
+</div>
+
+{% endblock %}

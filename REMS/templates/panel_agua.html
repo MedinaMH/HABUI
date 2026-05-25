@@ -1,0 +1,122 @@
+{% extends "estructura_base.html" %}
+{% load i18n %}
+{% block titulo %} Sistema REMS - Tanque de Agua {% endblock %}
+
+{% block contenido %}
+
+{% load static %}
+<!-- water_tank_monitor.html -->
+<script src="{% static 'js/d3.js' %}"></script>
+<script>
+  const TRANSLATIONS = {
+    level_history: "{% trans 'HISTÓRICO DE NIVELES' %}",
+    nivel: "{% trans 'Nivel (%)' %}",
+    tiempo: "{% trans 'Tiempo' %}",
+  };
+</script>
+<script src="{% static 'js/agua.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/estilos_view_agua.css' %}">
+
+<div class="monitor-container">
+  <!-- Encabezado -->
+  <div class="monitor-header">
+    <h3>{% trans "Monitoreo del Nivel de Suministro de Agua" %}</h3>
+    <!-- <div class="subtitle">Sistema de monitoreo en tiempo real del nivel de agua</div> -->
+  </div>
+  
+  <!-- Grid principal de visualizaciones -->
+  <div class="charts-grid">
+    <!-- Columna izquierda: Tanque -->
+    <div class="tank-column">
+      <div class="tank-container">
+        <!-- <div class="tank-title">
+          <span> Tanque de Agua</span>
+        </div> -->
+        <div id="grafico-tanque"></div>
+      </div>
+    </div>
+    
+    <!-- Columna derecha: Serie temporal -->
+    <div class="series-column">
+      <div class="series-container">
+        <!-- <div class="series-title">
+          <span> Histórico de Niveles</span>
+        </div> -->
+        <div id="serie-temporal"></div>
+      </div>
+    </div>
+    
+    <!-- Sección de niveles de referencia para agua -->
+    <div class="reference-section-water">
+      <div class="reference-title-water">
+        <span>{% trans "Niveles de Referencia del Tanque" %}</span>
+      </div>
+      <div class="reference-grid-water">
+        <div class="reference-item-water critical">
+          <div class="reference-header-water">
+            <div class="reference-icon-water"></div>
+            <div>
+              <div class="reference-range-water">&lt; 20 %</div>
+              <div class="reference-label-water">{% trans "NIVEL CRÍTICO" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description-water">
+            Tanque casi vacío. Riesgo de daño a la bomba y sistema de suministro. Necesidad urgente de recarga.
+          </div>
+          <div class="reference-recommendation-water">
+            ¡RECARGA URGENTE REQUERIDA! Bomba en riesgo de daño por funcionamiento en seco.
+          </div> -->
+        </div>
+        
+        <div class="reference-item-water low">
+          <div class="reference-header-water">
+            <div class="reference-icon-water"></div>
+            <div>
+              <div class="reference-range-water">20 - 40 %</div>
+              <div class="reference-label-water">{% trans "NIVEL BAJO" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description-water">
+            Reserva de agua insuficiente para demanda normal. Posibilidad de interrupciones en el suministro.
+          </div>
+          <div class="reference-recommendation-water">
+            Programar recarga próxima. Monitorear consumo y considerar restricciones temporales.
+          </div> -->
+        </div>
+        
+        <div class="reference-item-water normal">
+          <div class="reference-header-water">
+            <div class="reference-icon-water"></div>
+            <div>
+              <div class="reference-range-water">40 - 70 %</div>
+              <div class="reference-label-water">{% trans "NIVEL NORMAL" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description-water">
+            Nivel adecuado para demanda normal. Suministro estable y eficiencia óptima del sistema.
+          </div>
+          <div class="reference-recommendation-water">
+            Mantener monitoreo regular. Nivel seguro para operación continua del sistema.
+          </div> -->
+        </div>
+        
+        <div class="reference-item-water optimal">
+          <div class="reference-header-water">
+            <div class="reference-icon-water"></div>
+            <div>
+              <div class="reference-range-water">&gt; 70 %</div>
+              <div class="reference-label-water">{% trans "NIVEL ÓPTIMO" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description-water">
+            Capacidad máxima recomendada. Reserva excelente para emergencias y picos de demanda.
+          </div>
+          <div class="reference-recommendation-water">
+            Capacidad ideal alcanzada. Sistema operando con máxima eficiencia y reserva de seguridad.
+          </div> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

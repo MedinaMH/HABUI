@@ -1,0 +1,106 @@
+{% extends "estructura_base.html" %}
+{% load i18n %}
+{% block titulo %} Sistema REMS{% endblock %}
+
+{% block contenido %} 
+
+{% load static %}
+<!-- co2_monitor.html -->
+<script src="{% static 'js/d3.js' %}"></script>
+<script>
+  const TRANSLATIONS = {
+    history_co2: "{% trans 'HISTÓRICO DE CO₂ (ppm)' %}",
+    concentracion: "{% trans 'Concentración en tiempo real' %}",
+    tiempo: "{% trans 'Tiempo' %}",
+  };
+</script>
+<script src="{% static 'js/co2.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/estilos_view_co2.css' %}">
+
+<div class="monitor-container">
+  <!-- Encabezado -->
+  <div class="monitor-header">
+    <h3>{% trans "Monitoreo de CO₂ (ppm)" %}</h3>
+    <!-- <div class="subtitle">Sistema de monitoreo en tiempo real de concentración de dióxido de carbono</div> -->
+  </div>
+  
+  <!-- Grid principal de gráficos -->
+  <div class="charts-grid">
+    <!-- Columna izquierda: Gauge -->
+    <div class="gauge-column">
+      <div class="gauge-container">
+        <div class="gauge-title">
+          <span></span>
+        </div>
+        <div id="gauge-co2"></div>
+      </div>
+    </div>
+    
+    <!-- Columna derecha: Serie temporal -->
+    <div class="series-column">
+      <div class="series-container">
+        <!-- <div class="series-title">
+          <span>📈 Histórico de Concentración</span>
+        </div> -->
+        <div id="serie-co2"></div>
+      </div>
+    </div>
+    
+    <!-- Sección de niveles de referencia - DEBAJO DE AMBOS -->
+    <div class="reference-section">
+      <div class="reference-title">
+        <span>{% trans "Niveles de Referencia de CO₂" %}</span>
+      </div>
+      <div class="reference-grid">
+        <div class="reference-item good">
+          <div class="reference-header">
+            <div class="reference-icon">🟢</div>
+            <div>
+              <div class="reference-range">400 - 1000 ppm</div>
+              <div class="reference-label">{% trans "ÓPTIMO" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description">
+            Indicador de ventilación adecuada y confort
+          </div>
+          <div class="reference-recommendation">
+            Mantener ventilación normal. Condiciones óptimas para actividades prolongadas.
+          </div> -->
+        </div>
+        
+        <div class="reference-item moderate">
+          <div class="reference-header">
+            <div class="reference-icon">🟡</div>
+            <div>
+              <div class="reference-range">1000 - 2000 ppm</div>
+              <div class="reference-label">{% trans "ADVERTENCIA" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description">
+            Somnolencia leve, reducción cognitiva
+          </div>
+          <div class="reference-recommendation">
+            Se recomienda ventilación. Considerar pausas para aire fresco.
+          </div> -->
+        </div>
+        
+        <div class="reference-item high">
+          <div class="reference-header">
+            <div class="reference-icon">🔴</div>
+            <div>
+              <div class="reference-range">> 2000 ppm</div>
+              <div class="reference-label">{% trans "CRÍTICO" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description">
+            Riesgo fisiológico, hipercapnia progresiva
+          </div>
+          <div class="reference-recommendation">
+            ¡EVACUACIÓN RECOMENDADA! Ventilación urgente y evaluación del espacio.
+          </div> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

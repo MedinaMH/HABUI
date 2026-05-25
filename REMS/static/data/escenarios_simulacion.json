@@ -1,0 +1,184 @@
+{
+"escenarios": [
+{
+    "id": "co2_optimo",
+    "nombre": "CO2 - Optimal",
+    "comando": "sensor_CO2",
+    "parametros": {
+    "mode": "optimo",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "co2_advertencia",
+    "nombre": "CO2 - Warning",
+    "comando": "sensor_CO2",
+    "parametros": {
+    "mode": "advertencia",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "co2_critico",
+    "nombre": "CO2 - Critical",
+    "comando": "sensor_CO2",
+    "parametros": {
+    "mode": "critico",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "humedad_optimo",
+    "nombre": "Humidity - Optimal",
+    "comando": "sensor_humedad",
+    "parametros": {
+    "mode": "optimo",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "humedad_advertencia",
+    "nombre": "Humidity - Warning",
+    "comando": "sensor_humedad",
+    "parametros": {
+    "mode": "advertencia",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "humedad_critico",
+    "nombre": "Humidity - Critical",
+    "comando": "sensor_humedad",
+    "parametros": {
+    "mode": "critico",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "temperatura_optimo",
+    "nombre": "Temperature - Optimal",
+    "comando": "sensor_temperatura",
+    "parametros": {
+    "mode": "optimo",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "temperatura_advertencia",
+    "nombre": "Temperature - Warning",
+    "comando": "sensor_temperatura",
+    "parametros": {
+    "mode": "advertencia",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "temperatura_critico",
+    "nombre": "Temperature - Critical",
+    "comando": "sensor_temperatura",
+    "parametros": {
+    "mode": "critico",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "agua_normal",
+    "nombre": "Water - Normal",
+    "comando": "sensor_agua",
+    "parametros": {
+    "mode": "normal",
+    "interval": 5,
+    "count": 0
+    }
+},
+{
+    "id": "agua_consumo",
+    "nombre": "Water - Consumption",
+    "comando": "sensor_agua",
+    "parametros": {
+    "mode": "consumo",
+    "interval": 5,
+    "count": 0
+    }
+},
+{
+    "id": "agua_critico",
+    "nombre": "Water - Critical",
+    "comando": "sensor_agua",
+    "parametros": {
+    "mode": "critico",
+    "interval": 5,
+    "count": 0
+    }
+},
+{
+    "id": "oxigeno_optimo",
+    "nombre": "Oxygen - Optimal",
+    "comando": "sensor_oxigeno",
+    "parametros": {
+    "mode": "optimo",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "oxigeno_critico_alto",
+    "nombre": "Oxygen - High Critical",
+    "comando": "sensor_oxigeno",
+    "parametros": {
+    "mode": "critico_alto",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "oxigeno_advertencia_baja",
+    "nombre": "Oxygen - Low Warning",
+    "comando": "sensor_oxigeno",
+    "parametros": {
+    "mode": "advertencia_baja",
+    "interval": 2,
+    "count": 0
+    }
+},
+{
+    "id": "energia_optimo",
+    "nombre": "Energy - Optimal",
+    "comando": "simulador_fallas_energia",
+    "parametros": {
+    "interval": 3,
+    "capacity": 6500,
+    "initial_soc": 0.9
+    }
+},
+{
+    "id": "energia_advertencia",
+    "nombre": "Energy - Warning",
+    "comando": "simulador_fallas_energia",
+    "parametros": {
+    "interval": 3,
+    "capacity": 6500,
+    "initial_soc": 0.2
+    }
+},
+{
+    "id": "energia_critico",
+    "nombre": "Energy - Critical",
+    "comando": "simulador_fallas_energia",
+    "parametros": {
+    "interval": 3,
+    "capacity": 6500,
+    "initial_soc": 0.09
+    }
+}
+]
+}

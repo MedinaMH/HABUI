@@ -1,0 +1,1450 @@
+{% extends "estructura_base.html" %}
+{% load i18n %}
+
+{% block titulo %}Sistema REMS - {% trans "Energía" %}{% endblock %}
+
+{% block contenido %}
+{% load static %}
+
+<script src="{% static 'js/d3.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/estilos_view_energia.css' %}">
+
+<div class="dashboard-container">
+  <!-- Encabezado -->
+  <div class="dashboard-header" id="energy-header">
+    <div>
+      <h1 class="dashboard-title">{% trans "Monitoreo Energético del Hábitat" %}</h1>
+    </div>
+
+    <div id="low-energy-indicator" class="low-energy-indicator" style="display: none;">
+      {% trans "MODO ENERGÍA BAJA ACTIVADO - Protocolo de emergencia energética" %}
+    </div>
+  </div>
+
+  <!-- Alertas -->
+  <div id="energy-alert-container" class="energy-alert-container" style="display: none;">
+    <div class="alert-header">
+      <span class="alert-icon" id="alert-icon">⚠</span>
+      <div class="alert-content">
+        <h3 id="alert-title">{% trans "ALERTA DE ENERGÍA" %}</h3>
+        <p id="alert-message">{% trans "Sistema energético operativo." %}</p>
+        <div id="alert-suggestions" class="alert-suggestions"></div>
+      </div>
+      <button id="close-alert-btn" class="close-alert-btn" type="button" aria-label="{% trans 'Cerrar alerta' %}">×</button>
+    </div>
+  </div>
+
+  <!-- Métricas principales -->
+  <div class="metrics-panel priority-metrics-panel">
+    <h3 class="section-title">{% trans "Indicadores Prioritarios" %}</h3>
+    <div class="metrics-horizontal-container">
+      <div class="metric-ultra-compact metric-solar-card">
+        <div class="metric-title-ultra-compact">{% trans "GENERACIÓN SOLAR" %}</div>
+        <p class="metric-value-ultra-compact"><span id="metric-solar">--</span> <span class="metric-unit-ultra-compact">W</span></p>
+        <div class="metric-status-ultra-compact status-stable" id="status-solar">{% trans "SIN DATOS" %}</div>
+      </div>
+
+      <div class="metric-ultra-compact metric-consumption-card">
+        <div class="metric-title-ultra-compact">{% trans "CONSUMO HÁBITAT" %}</div>
+        <p class="metric-value-ultra-compact"><span id="metric-consumo">--</span> <span class="metric-unit-ultra-compact">W</span></p>
+        <div class="metric-status-ultra-compact status-stable" id="status-consumo">{% trans "SIN DATOS" %}</div>
+      </div>
+
+      <div class="metric-ultra-compact metric-balance-card">
+        <div class="metric-title-ultra-compact">{% trans "BALANCE" %}</div>
+        <p class="metric-value-ultra-compact"><span id="metric-balance">--</span> <span class="metric-unit-ultra-compact">W</span></p>
+        <div class="metric-status-ultra-compact status-stable" id="status-balance">{% trans "SIN DATOS" %}</div>
+      </div>
+
+      <div class="metric-ultra-compact metric-soc-card">
+        <div class="metric-title-ultra-compact">{% trans "BATERÍA" %}</div>
+        <p class="metric-value-ultra-compact"><span id="metric-soc">--</span> <span class="metric-unit-ultra-compact">%</span></p>
+        <div class="metric-status-ultra-compact status-stable" id="status-soc">{% trans "SIN DATOS" %}</div>
+      </div>
+
+      <div class="metric-ultra-compact metric-autonomy-card">
+        <div class="metric-title-ultra-compact">{% trans "AUTONOMÍA" %}</div>
+        <p class="metric-value-ultra-compact"><span id="metric-autonomia">--</span> <span class="metric-unit-ultra-compact" id="metric-autonomia-unit">h</span></p>
+        <div class="metric-status-ultra-compact status-stable" id="status-autonomia">{% trans "SIN DATOS" %}</div>
+      </div>
+
+      <div class="metric-ultra-compact metric-system-card">
+        <div class="metric-title-ultra-compact">{% trans "ESTADO" %}</div>
+        <p class="metric-value-ultra-compact metric-text-value" id="metric-energy-status">--</p>
+        <div class="metric-status-ultra-compact status-stable" id="status-energy-status">{% trans "SIN DATOS" %}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layout principal -->
+  <div class="main-grid">
+    <div class="chart-and-metrics-container">
+      <!-- Gráfica de balance -->
+      <div class="main-chart chart-card">
+        <div class="chart-header-row">
+          <div>
+            <h3 class="section-title">{% trans "Balance energético del hábitat" %}</h3>
+            <p class="section-caption">
+              {% trans "Comparación entre generación solar, consumo del hábitat y balance instantáneo." %}
+            </p>
+          </div>
+          <button id="reset-power-chart" class="chart-btn reset home-btn" type="button" title="{% trans 'Inicio 1 min' %}" aria-label="{% trans 'Inicio 1 min' %}">🏠</button>
+        </div>
+        <div id="powerChartContainer" class="interactive-chart-container power-chart-container"></div>
+      </div>
+
+      <!-- Gráfica de batería -->
+      <div class="main-chart chart-card compact-chart-card">
+        <div class="chart-header-row">
+          <div>
+            <h3 class="section-title">{% trans "Evolución del estado de batería" %}</h3>
+            <p class="section-caption">
+              {% trans "Seguimiento del estado de carga del banco de baterías en porcentaje." %}
+            </p>
+          </div>
+          <button id="reset-battery-chart" class="chart-btn reset home-btn" type="button" title="{% trans 'Inicio 1 min' %}" aria-label="{% trans 'Inicio 1 min' %}">🏠</button>
+        </div>
+        <div id="batteryTrendChartContainer" class="interactive-chart-container battery-chart-container"></div>
+      </div>
+
+      <!-- Áreas del hábitat -->
+      <div class="habitat-areas-panel" id="habitat-areas-panel">
+        <div class="chart-header-row">
+          <div>
+            <h3 class="section-title">{% trans "Áreas del hábitat" %}</h3>
+            <p class="section-caption">
+              {% trans "Prioridad de suministro durante condiciones de advertencia o estado crítico." %}
+            </p>
+          </div>
+          <span id="areas-mode-badge" class="areas-mode-badge normal-mode">{% trans "Modo normal" %}</span>
+        </div>
+
+        <div class="areas-status-summary">
+          <div class="status-item">
+            <span class="status-label">{% trans "Área crítica:" %}</span>
+            <span class="status-value" id="critical-area-name">{% trans "Sala de monitoreo" %}</span>
+            <span class="status-badge priority-badge">{% trans "PRIORIDAD" %}</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">{% trans "Áreas apagadas:" %}</span>
+            <span class="status-value" id="shutdown-count">0</span>
+            <span class="status-badge warning-badge">{% trans "CORTE PROGRAMADO" %}</span>
+          </div>
+        </div>
+
+        <div class="areas-grid" id="habitat-areas-grid">
+          <div class="loading-areas">{% trans "Sin datos de áreas por el momento" %}</div>
+        </div>
+
+        <div class="areas-instructions">
+          <div class="instruction-item">
+            <span class="instruction-icon">⚠</span>
+            <span class="instruction-text">{% trans "En modo crítico, solo el área prioritaria mantiene energía." %}</span>
+          </div>
+          <div class="instruction-item">
+            <span class="instruction-icon">⏻</span>
+            <span class="instruction-text">{% trans "Las áreas no críticas se apagan automáticamente para preservar el banco de baterías." %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel lateral de batería -->
+    <div class="battery-panel">
+      <h3 class="section-title battery-title">{% trans "Banco de Baterías" %}</h3>
+
+      <div id="battery-status-badge" class="battery-status-badge status-normal">
+        <span id="battery-status-text">{% trans "SIN DATOS" %}</span>
+      </div>
+
+      <div class="battery-container">
+        <div id="battery-svg-container">
+          <svg id="battery-main-svg" width="280" height="400"></svg>
+        </div>
+
+        <div id="battery-percentage-large" class="battery-percentage-large">--%</div>
+
+        <div class="battery-info-panel">
+          <div class="battery-info-item">
+            <div class="battery-info-label">{% trans "Capacidad Total" %}</div>
+            <div id="battery-capacity-value" class="battery-info-value">-- Wh</div>
+          </div>
+
+          <div class="battery-info-item">
+            <div class="battery-info-label">{% trans "Energía Restante" %}</div>
+            <div id="battery-remaining-value" class="battery-info-value">-- Wh</div>
+          </div>
+
+          <div class="battery-info-item">
+            <div class="battery-info-label">{% trans "Autonomía" %}</div>
+            <div id="battery-time-value" class="battery-info-value">--</div>
+          </div>
+
+          <div class="battery-info-item">
+            <div class="battery-info-label">{% trans "Balance actual" %}</div>
+            <div id="battery-flow-value" class="battery-info-value">-- W</div>
+          </div>
+        </div>
+
+        <div class="battery-flow-indicator-wrapper">
+          <div class="battery-flow-label">{% trans "ESTADO DEL FLUJO" %}</div>
+          <div id="flow-indicator" class="flow-indicator">{% trans "SIN DATOS" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const API_URL = "{% url 'api_energia_get' %}";
+  const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+  const wsUrl = wsProtocol + window.location.host + "/ws/energia/";
+
+  let ws = null;
+  let isRealtimeConnected = false;
+  let currentEnergyStatus = "normal";
+  let batteryCapacity = 0;
+  let chartData = [];
+  const MAX_DATA_POINTS = 2000;
+
+  const T = {
+    sourceLoading: '{% trans "Cargando histórico..." %}',
+    sourceHistorical: '{% trans "Histórico BD" %}',
+    sourceRealtime: '{% trans "Tiempo real" %}',
+    sourceDisconnected: '{% trans "WebSocket desconectado" %}',
+    noData: '{% trans "Sin datos" %}',
+    normal: '{% trans "NORMAL" %}',
+    warning: '{% trans "ADVERTENCIA" %}',
+    critical: '{% trans "CRÍTICO" %}',
+    optimal: '{% trans "ÓPTIMO" %}',
+    moderate: '{% trans "MODERADO" %}',
+    low: '{% trans "BAJO" %}',
+    charging: '{% trans "CARGANDO" %}',
+    discharging: '{% trans "DESCARGANDO" %}',
+    balanced: '{% trans "EQUILIBRADO" %}',
+    deficit: '{% trans "DÉFICIT" %}',
+    surplus: '{% trans "EXCEDENTE" %}',
+    stable: '{% trans "ESTABLE" %}',
+    solarLow: '{% trans "BAJA" %}',
+    solarActive: '{% trans "ACTIVA" %}',
+    consumptionNormal: '{% trans "NORMAL" %}',
+    consumptionHigh: '{% trans "ALTO" %}',
+    autonomyCharging: '{% trans "Cargando / sostenido" %}',
+    criticalAlertTitle: '{% trans "ALERTA CRÍTICA DE ENERGÍA" %}',
+    warningAlertTitle: '{% trans "ADVERTENCIA DE ENERGÍA" %}',
+    criticalAlertMessage: '{% trans "El banco de baterías se encuentra en condición crítica. Activar protocolo de baja energía." %}',
+    warningAlertMessage: '{% trans "Nivel de energía bajo. Preparar medidas de contingencia y reducir consumo no esencial." %}',
+    normalAlertMessage: '{% trans "Sistema energético operativo." %}',
+    recommendations: '{% trans "Recomendaciones:" %}',
+    immediateActions: '{% trans "Acciones inmediatas:" %}',
+    chartHint: '{% trans "Rueda: zoom | Arrastrar a la derecha: histórico | Doble clic: volver al final" %}',
+    visibleCounter: '{% trans "visibles" %}',
+    totalCounter: '{% trans "totales" %}',
+    windowLabel: '{% trans "Ventana" %}',
+    timeLabel: '{% trans "Tiempo" %}',
+    areaDormitorios: '{% trans "Dormitorios" %}',
+    areaBano: '{% trans "Baño" %}',
+    areaPasillo: '{% trans "Pasillo" %}',
+    areaExteriores: '{% trans "Exteriores" %}',
+    areaSalaMonitoreo: '{% trans "Sala de monitoreo" %}',
+    priority: '{% trans "CRÍTICA - PRIORIDAD" %}',
+    energyGuaranteed: '{% trans "ENERGÍA GARANTIZADA" %}',
+    essentialSystem: '{% trans "Sistema esencial - No se apaga" %}',
+    turnedOff: '{% trans "APAGADA" %}',
+    operational: '{% trans "OPERATIVA" %}',
+    energyCut: '{% trans "CORTE DE ENERGÍA" %}',
+    nonEssential: '{% trans "Sistema no esencial" %}',
+    normalMode: '{% trans "Modo normal" %}',
+    emergencyMode: '{% trans "Modo emergencia" %}',
+    reducedMode: '{% trans "Modo reducción" %}',
+    suggestions: [
+      '{% trans "Revisar estado del banco de baterías." %}',
+      '{% trans "Verificar conexión y rendimiento de paneles solares." %}',
+      '{% trans "Reducir consumo en sistemas no esenciales." %}',
+      '{% trans "Comprobar inversor y regulador de carga." %}',
+      '{% trans "Evaluar posible sobreconsumo inesperado." %}'
+    ]
+  };
+
+  const AREA_TRANSLATIONS = {
+    "area.dormitorios": T.areaDormitorios,
+    "area.bano": T.areaBano,
+    "area.pasillo": T.areaPasillo,
+    "area.exteriores": T.areaExteriores,
+    "area.sala_monitoreo": T.areaSalaMonitoreo
+  };
+
+  function safeNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function firstDefined(...values) {
+    for (const value of values) {
+      if (value !== undefined && value !== null && value !== "") return value;
+    }
+    return null;
+  }
+
+  function formatNumber(value, decimals = 0) {
+    if (value === null || value === undefined || Number.isNaN(Number(value))) return "--";
+    return Number(value).toLocaleString(undefined, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+  }
+
+  function formatDateTime(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "--";
+    return date.toLocaleTimeString();
+  }
+
+  function parseTimestamp(raw) {
+    if (raw.fecha_hora) return new Date(raw.fecha_hora);
+    if (raw.tgen) return new Date(raw.tgen);
+    if (raw.tstart) return new Date(raw.tstart);
+    if (raw.timestamp) {
+      const ts = Number(raw.timestamp);
+      if (Number.isFinite(ts)) return new Date(ts > 1000000000000 ? ts : ts * 1000);
+    }
+    return new Date();
+  }
+
+  function normalizeEnergyData(raw) {
+    const solarW = safeNumber(firstDefined(raw.potencia_generada_w, raw.solar_estimated_w, raw.solar_w), 0);
+    const consumoW = safeNumber(firstDefined(raw.potencia_consumida_w, raw.consumo_w, raw.potencia), 0);
+    const balanceW = safeNumber(firstDefined(raw.balance_w, raw.net_flow_w), solarW - consumoW);
+
+    const socPctRaw = firstDefined(raw.soc_bateria_pct, raw.soc_percent, raw.battery);
+    let socPct = safeNumber(socPctRaw, 0);
+    if (socPct <= 1 && firstDefined(raw.soc_bateria_pct, raw.soc_percent) === null) {
+      socPct = socPct * 100;
+    }
+
+    return {
+      id: raw.id || raw.sample_id || cryptoRandomId(),
+      raw: raw,
+      time: parseTimestamp(raw),
+
+      solarW: solarW,
+      consumoW: consumoW,
+      balanceW: balanceW,
+
+      socPct: Math.max(0, Math.min(100, socPct)),
+      bateriaWh: safeNumber(firstDefined(raw.energia_bateria_wh, raw.battery_wh), 0),
+      capacidadWh: safeNumber(firstDefined(raw.capacidad_bateria_wh, raw.capacity_wh), 0),
+      autonomiaH: firstDefined(raw.autonomia_h) === null ? null : safeNumber(raw.autonomia_h, null),
+
+      estado: firstDefined(raw.estado_energia, raw.energy_status, raw.estado) || "normal",
+      modoBajaEnergia: Boolean(firstDefined(raw.modo_baja_energia, raw.low_energy_mode, false)),
+      areas: raw.areas || null,
+      alerts: raw.alerts || null,
+      sampleId: raw.sample_id || null
+    };
+  }
+
+  function cryptoRandomId() {
+    return "energy-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  function setDataSource(mode) {
+    const badge = document.getElementById("data-source-badge");
+    if (!badge) return;
+    badge.className = "data-source-badge";
+    if (mode === "realtime") {
+      badge.textContent = T.sourceRealtime;
+      badge.classList.add("source-realtime");
+    } else if (mode === "historical") {
+      badge.textContent = T.sourceHistorical;
+      badge.classList.add("source-historical");
+    } else if (mode === "disconnected") {
+      badge.textContent = T.sourceDisconnected;
+      badge.classList.add("source-disconnected");
+    } else {
+      badge.textContent = T.sourceLoading;
+      badge.classList.add("source-loading");
+    }
+  }
+
+  function statusClass(status) {
+    if (status === "critical") return "status-critical";
+    if (status === "warning" || status === "low") return "status-warning";
+    if (status === "optimal" || status === "normal") return "status-normal";
+    return "status-stable";
+  }
+
+  function setStatusBadge(id, text, className) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = "metric-status-ultra-compact " + className;
+  }
+
+  function humanStatus(status) {
+    if (status === "critical") return T.critical;
+    if (status === "warning") return T.warning;
+    if (status === "low") return T.low;
+    if (status === "optimal") return T.optimal;
+    return T.normal;
+  }
+
+  function batteryBand(socPct) {
+    if (socPct <= 20) return { label: T.critical, className: "status-critical", state: "critical" };
+    if (socPct <= 40) return { label: T.low, className: "status-warning", state: "warning" };
+    if (socPct < 70) return { label: T.moderate, className: "status-stable", state: "normal" };
+    return { label: T.optimal, className: "status-normal", state: "normal" };
+  }
+
+  function updateMetrics(d) {
+    document.getElementById("metric-solar").textContent = formatNumber(d.solarW, 0);
+    document.getElementById("metric-consumo").textContent = formatNumber(d.consumoW, 0);
+    document.getElementById("metric-balance").textContent = formatNumber(d.balanceW, 0);
+    document.getElementById("metric-soc").textContent = formatNumber(d.socPct, 0);
+    document.getElementById("metric-energy-status").textContent = humanStatus(d.estado);
+    const lastUpdateTime = document.getElementById("last-update-time");
+    if (lastUpdateTime) lastUpdateTime.textContent = formatDateTime(d.time);
+
+    if (d.autonomiaH === null || d.balanceW >= 0) {
+      document.getElementById("metric-autonomia").textContent = "∞";
+      document.getElementById("metric-autonomia-unit").textContent = "";
+    } else {
+      document.getElementById("metric-autonomia").textContent = formatNumber(d.autonomiaH, 1);
+      document.getElementById("metric-autonomia-unit").textContent = "h";
+    }
+
+    setStatusBadge("status-solar", d.solarW > 50 ? T.solarActive : T.solarLow, d.solarW > 50 ? "status-normal" : "status-warning");
+    setStatusBadge("status-consumo", d.consumoW > 2500 ? T.consumptionHigh : T.consumptionNormal, d.consumoW > 2500 ? "status-warning" : "status-stable");
+
+    if (d.balanceW > 50) {
+      setStatusBadge("status-balance", T.surplus, "status-normal");
+    } else if (d.balanceW < -50) {
+      setStatusBadge("status-balance", T.deficit, d.estado === "critical" ? "status-critical" : "status-warning");
+    } else {
+      setStatusBadge("status-balance", T.balanced, "status-stable");
+    }
+
+    const b = batteryBand(d.socPct);
+    setStatusBadge("status-soc", b.label, b.className);
+
+    if (d.autonomiaH === null || d.balanceW >= 0) {
+      setStatusBadge("status-autonomia", T.charging, "status-normal");
+    } else if (d.autonomiaH <= 1) {
+      setStatusBadge("status-autonomia", T.critical, "status-critical");
+    } else if (d.autonomiaH <= 3) {
+      setStatusBadge("status-autonomia", T.low, "status-warning");
+    } else {
+      setStatusBadge("status-autonomia", T.stable, "status-normal");
+    }
+
+    setStatusBadge("status-energy-status", humanStatus(d.estado), statusClass(d.estado));
+  }
+
+  function updateAlerts(d) {
+    const alertContainer = document.getElementById("energy-alert-container");
+    const alertIcon = document.getElementById("alert-icon");
+    const alertTitle = document.getElementById("alert-title");
+    const alertMessage = document.getElementById("alert-message");
+    const suggestionsContainer = document.getElementById("alert-suggestions");
+    const lowEnergyIndicator = document.getElementById("low-energy-indicator");
+
+    lowEnergyIndicator.style.display = d.modoBajaEnergia ? "block" : "none";
+
+    const suggestions = (d.alerts && Array.isArray(d.alerts.suggestions) && d.alerts.suggestions.length > 0)
+      ? d.alerts.suggestions
+      : T.suggestions;
+
+    if (d.estado === "critical") {
+      alertContainer.style.display = "block";
+      alertContainer.className = "energy-alert-container critical-alert";
+      alertIcon.textContent = "🔴";
+      alertTitle.textContent = T.criticalAlertTitle;
+      alertMessage.textContent = (d.alerts && d.alerts.message) || T.criticalAlertMessage;
+      suggestionsContainer.innerHTML = `<strong>${T.immediateActions}</strong><ul>${suggestions.map(s => `<li>${s}</li>`).join("")}</ul>`;
+      document.title = "🚨 " + T.criticalAlertTitle;
+    } else if (d.estado === "warning") {
+      alertContainer.style.display = "block";
+      alertContainer.className = "energy-alert-container warning-alert";
+      alertIcon.textContent = "🟠";
+      alertTitle.textContent = T.warningAlertTitle;
+      alertMessage.textContent = (d.alerts && d.alerts.message) || T.warningAlertMessage;
+      suggestionsContainer.innerHTML = `<strong>${T.recommendations}</strong><ul>${suggestions.slice(0, 3).map(s => `<li>${s}</li>`).join("")}</ul>`;
+      document.title = "⚠ {% trans 'Energía baja' %}";
+    } else {
+      alertContainer.style.display = "none";
+      document.title = "⚡ {% trans 'Energía' %}";
+    }
+
+    currentEnergyStatus = d.estado;
+  }
+
+  function updateHabitatAreas(areasData, estado) {
+    const areasGrid = document.getElementById("habitat-areas-grid");
+    const shutdownCountElement = document.getElementById("shutdown-count");
+    const criticalAreaNameElement = document.getElementById("critical-area-name");
+    const areasModeBadge = document.getElementById("areas-mode-badge");
+    const panel = document.getElementById("habitat-areas-panel");
+
+    if (areasModeBadge) {
+      areasModeBadge.className = "areas-mode-badge";
+      if (estado === "critical") {
+        areasModeBadge.textContent = T.emergencyMode;
+        areasModeBadge.classList.add("emergency-mode");
+        panel.classList.add("areas-expanded");
+      } else if (estado === "warning") {
+        areasModeBadge.textContent = T.reducedMode;
+        areasModeBadge.classList.add("reduced-mode");
+        panel.classList.remove("areas-expanded");
+      } else {
+        areasModeBadge.textContent = T.normalMode;
+        areasModeBadge.classList.add("normal-mode");
+        panel.classList.remove("areas-expanded");
+      }
+    }
+
+    if (!areasData) {
+      shutdownCountElement.textContent = "0";
+      areasGrid.innerHTML = `<div class="loading-areas">${T.noData}</div>`;
+      return;
+    }
+
+    let shutdownCount = 0;
+    let areasHTML = "";
+
+    if (areasData.critical && areasData.critical.length > 0) {
+      areasData.critical.forEach(area => {
+        const displayArea = AREA_TRANSLATIONS[area] || area;
+        criticalAreaNameElement.textContent = displayArea;
+        areasHTML += `
+          <div class="area-card critical-priority-area">
+            <div class="area-icon">🚨</div>
+            <div class="area-info">
+              <div class="area-name">${displayArea}</div>
+              <div class="area-status">${T.priority}</div>
+            </div>
+            <div class="area-notice">⚡ ${T.energyGuaranteed}</div>
+            <div class="area-description">${T.essentialSystem}</div>
+          </div>
+        `;
+      });
+    }
+
+    if (areasData.non_critical && areasData.non_critical.length > 0) {
+      areasData.non_critical.forEach(area => {
+        const isShutdown = areasData.shutdown && areasData.shutdown.includes(area);
+        if (isShutdown) shutdownCount++;
+        const displayArea = AREA_TRANSLATIONS[area] || area;
+
+        areasHTML += `
+          <div class="area-card ${isShutdown ? "shutdown-area" : "operational-area"}">
+            <div class="area-icon">${isShutdown ? "⏻" : "🏠"}</div>
+            <div class="area-info">
+              <div class="area-name">${displayArea}</div>
+              <div class="area-status">${isShutdown ? T.turnedOff : T.operational}</div>
+            </div>
+            ${isShutdown
+              ? `<div class="area-warning">⚡ ${T.energyCut}</div>`
+              : `<div class="area-note">${T.nonEssential}</div>`}
+          </div>
+        `;
+      });
+    }
+
+    shutdownCountElement.textContent = shutdownCount;
+    areasGrid.innerHTML = areasHTML || `<div class="loading-areas">${T.noData}</div>`;
+  }
+
+  function initBatteryVisualization() {
+    const svg = d3.select("#battery-main-svg");
+    const width = 280;
+    const height = 400;
+    svg.attr("width", width).attr("height", height);
+    svg.selectAll("*").remove();
+
+    const batteryGroup = svg.append("g").attr("transform", `translate(${width / 2}, 40)`);
+    const batteryWidth = 160;
+    const batteryHeight = 280;
+
+    batteryGroup.append("rect")
+      .attr("x", -batteryWidth / 2)
+      .attr("y", 0)
+      .attr("width", batteryWidth)
+      .attr("height", batteryHeight)
+      .attr("rx", 12)
+      .attr("ry", 12)
+      .attr("fill", "none")
+      .attr("stroke", "#4b5563")
+      .attr("stroke-width", 5);
+
+    batteryGroup.append("rect")
+      .attr("x", -20)
+      .attr("y", -18)
+      .attr("width", 40)
+      .attr("height", 18)
+      .attr("rx", 5)
+      .attr("fill", "#fbbf24")
+      .attr("stroke", "#d97706")
+      .attr("stroke-width", 2.5);
+
+    const chargeLevel = batteryGroup.append("rect")
+      .attr("x", -batteryWidth / 2 + 10)
+      .attr("y", batteryHeight)
+      .attr("width", batteryWidth - 20)
+      .attr("height", 0)
+      .attr("rx", 8)
+      .attr("fill", "#10b981");
+
+    for (let i = 0; i <= 100; i += 20) {
+      const yPos = batteryHeight - (i / 100) * batteryHeight;
+      batteryGroup.append("line")
+        .attr("x1", -batteryWidth / 2 - 15)
+        .attr("x2", -batteryWidth / 2 - 5)
+        .attr("y1", yPos)
+        .attr("y2", yPos)
+        .attr("stroke", "#6b7280")
+        .attr("stroke-width", 2.5);
+      batteryGroup.append("text")
+        .attr("x", -batteryWidth / 2 - 20)
+        .attr("y", yPos + 5)
+        .attr("text-anchor", "end")
+        .attr("fill", "#cbd5e1")
+        .attr("font-size", "19px")
+        .attr("font-weight", "600")
+        .text(i + "%");
+    }
+
+    return function updateBattery(d) {
+      if (d.capacidadWh > 0) batteryCapacity = d.capacidadWh;
+
+      const socPercent = Math.max(0, Math.min(100, d.socPct));
+      const fillHeight = (socPercent / 100) * batteryHeight;
+      const yPos = batteryHeight - fillHeight;
+
+      let color = "#10b981";
+      if (d.estado === "critical" || socPercent <= 20) color = "#ef4444";
+      else if (d.estado === "warning" || socPercent <= 40) color = "#f59e0b";
+      else if (socPercent < 70) color = "#3b82f6";
+
+      chargeLevel.transition()
+        .duration(700)
+        .attr("y", yPos)
+        .attr("height", fillHeight)
+        .attr("fill", color);
+
+      const b = batteryBand(socPercent);
+      const statusBadge = document.getElementById("battery-status-badge");
+      statusBadge.className = "battery-status-badge " + b.className;
+      document.getElementById("battery-status-text").textContent = b.label;
+
+      const percentageLarge = document.getElementById("battery-percentage-large");
+      percentageLarge.textContent = formatNumber(socPercent, 0) + "%";
+      percentageLarge.style.color = color;
+
+      document.getElementById("battery-capacity-value").textContent = formatNumber(d.capacidadWh || batteryCapacity, 0) + " Wh";
+      document.getElementById("battery-remaining-value").textContent = formatNumber(d.bateriaWh, 0) + " Wh";
+      document.getElementById("battery-flow-value").textContent = formatNumber(d.balanceW, 0) + " W";
+
+      const timeValue = document.getElementById("battery-time-value");
+      if (d.autonomiaH === null || d.balanceW >= 0) {
+        timeValue.textContent = T.autonomyCharging;
+        timeValue.className = "battery-info-value positive-text";
+      } else {
+        timeValue.textContent = formatNumber(d.autonomiaH, 1) + " h";
+        timeValue.className = "battery-info-value" + (d.autonomiaH <= 1 ? " critical-text" : d.autonomiaH <= 3 ? " warning-text" : " positive-text");
+      }
+
+      const flowIndicator = document.getElementById("flow-indicator");
+      if (d.balanceW > 50) {
+        flowIndicator.textContent = T.charging;
+        flowIndicator.className = "flow-indicator flow-positive";
+      } else if (d.balanceW < -50) {
+        flowIndicator.textContent = T.discharging;
+        flowIndicator.className = "flow-indicator " + (d.estado === "critical" ? "flow-critical" : "flow-warning");
+      } else {
+        flowIndicator.textContent = T.balanced;
+        flowIndicator.className = "flow-indicator flow-stable";
+      }
+    };
+  }
+
+  function createInteractiveEnergyChart(config) {
+    const container = d3.select(config.containerId);
+    container.html("");
+    container.style("position", "relative");
+
+    const outerH = config.height || 390;
+    const margin = config.margin || { top: 42, right: 70, bottom: 58, left: 72 };
+    const DEFAULT_WINDOW_MS = 60 * 1000;
+    const MIN_WINDOW_MS = 5 * 1000;
+    const MAX_WINDOW_MS = 30 * 24 * 3600 * 1000;
+    const ZOOM_FACTOR = 0.15;
+    const LIVE_EDGE_TOLERANCE_MS = 1500;
+    const DRAG_DIRECTION_THRESHOLD_PX = 5;
+
+    let currentWindowMs = DEFAULT_WINDOW_MS;
+    let currentViewStart = null;
+    let currentViewEnd = null;
+    let autoFollowLatest = true;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartViewStart = null;
+    let dragStartViewEnd = null;
+
+    const safeId = String(config.containerId).replace(/[^a-zA-Z0-9_-]/g, "_");
+    const clipId = `${safeId}-clip`;
+    const gradientIds = {};
+
+    const svg = container.append("svg")
+      .attr("class", "interactive-energy-svg")
+      .style("background", "#0f172a")
+      .style("border", "3px solid #ffffff")
+      .style("border-radius", "12px")
+      .style("box-shadow", "0 4px 20px rgba(0, 191, 255, 0.14)");
+
+    const hint = container.append("div")
+      .attr("class", "chart-interaction-hint")
+      .text("🖱 " + T.chartHint);
+
+    const tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip energy-chart-tooltip")
+      .style("position", "absolute")
+      .style("background", "rgba(15,23,42,0.96)")
+      .style("color", "#e2e8f0")
+      .style("padding", "12px 16px")
+      .style("border", "2px solid #00bfff")
+      .style("border-radius", "10px")
+      .style("font-size", "15px")
+      .style("font-weight", "500")
+      .style("pointer-events", "none")
+      .style("opacity", 0)
+      .style("box-shadow", "0 8px 24px rgba(0,0,0,0.3)")
+      .style("backdrop-filter", "blur(4px)")
+      .style("z-index", "9999");
+
+    const x = d3.scaleTime();
+    const y = d3.scaleLinear();
+
+    let g = null;
+    let plotW = 0;
+    let plotH = 0;
+    let pathLayer = null;
+    let pointLayer = null;
+    let focusLayer = null;
+    let xAxisG = null;
+    let yAxisG = null;
+    let gridG = null;
+    let zeroLine = null;
+    let thresholdLayer = null;
+    let focusLine = null;
+    let overlay = null;
+    let initialized = false;
+
+    function getData() {
+      return chartData;
+    }
+
+    function getLatestTime() {
+      const data = getData();
+      return data.length ? data[data.length - 1].time : new Date();
+    }
+
+    function getEarliestTime() {
+      const data = getData();
+      return data.length ? data[0].time : new Date();
+    }
+
+    function ensureViewInitialized() {
+      if (!currentViewStart || !currentViewEnd) {
+        const latest = getLatestTime();
+        currentViewEnd = new Date(latest);
+        currentViewStart = new Date(latest.getTime() - currentWindowMs);
+      }
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function clampViewToDataRange() {
+      const data = getData();
+      if (data.length === 0) return;
+
+      const minData = getEarliestTime().getTime();
+      const maxData = getLatestTime().getTime();
+      let winSize = currentViewEnd.getTime() - currentViewStart.getTime();
+
+      if (winSize <= 0) {
+        winSize = currentWindowMs;
+        currentViewEnd = new Date(currentViewStart.getTime() + winSize);
+      }
+
+      if ((maxData - minData) <= winSize) {
+        currentViewStart = new Date(minData);
+        currentViewEnd = new Date(minData + winSize);
+        return;
+      }
+
+      if (currentViewStart.getTime() < minData) {
+        currentViewStart = new Date(minData);
+        currentViewEnd = new Date(minData + winSize);
+      }
+
+      if (currentViewEnd.getTime() > maxData) {
+        currentViewEnd = new Date(maxData);
+        currentViewStart = new Date(maxData - winSize);
+      }
+    }
+
+    function getVisibleData() {
+      ensureViewInitialized();
+      return getData().filter(d => d.time >= currentViewStart && d.time <= currentViewEnd);
+    }
+
+    function getTickFormatter() {
+      if (currentWindowMs <= 3600 * 1000) return d3.timeFormat("%H:%M:%S");
+      if (currentWindowMs <= 24 * 3600 * 1000) return d3.timeFormat("%d/%m %H:%M");
+      return d3.timeFormat("%d/%m/%Y %H:%M");
+    }
+
+    function setHistoricalMode() {
+      autoFollowLatest = false;
+    }
+
+    function goToLatest(resetToDefaultWindow = false) {
+      if (resetToDefaultWindow) currentWindowMs = DEFAULT_WINDOW_MS;
+      autoFollowLatest = true;
+      const latest = getLatestTime();
+      currentViewEnd = new Date(latest);
+      currentViewStart = new Date(latest.getTime() - currentWindowMs);
+      redraw();
+    }
+
+    function maybeReactivateLiveFromPan() {
+      const data = getData();
+      if (!data.length || !currentViewEnd) return false;
+
+      const latestMs = getLatestTime().getTime();
+      const viewEndMs = currentViewEnd.getTime();
+      const tolerance = Math.max(LIVE_EDGE_TOLERANCE_MS, currentWindowMs * 0.01);
+      const reachedLiveEdge = Math.abs(latestMs - viewEndMs) <= tolerance || viewEndMs >= latestMs;
+
+      if (reachedLiveEdge) {
+        autoFollowLatest = true;
+        currentViewEnd = new Date(latestMs);
+        currentViewStart = new Date(latestMs - currentWindowMs);
+        return true;
+      }
+      return false;
+    }
+
+    function formatWindowLabel() {
+      if (currentWindowMs < 60000) return `${Math.round(currentWindowMs / 1000)}s`;
+      if (currentWindowMs < 3600000) return `${(currentWindowMs / 60000).toFixed(1)}min`;
+      if (currentWindowMs < 24 * 3600000) return `${(currentWindowMs / 3600000).toFixed(1)}h`;
+      return `${(currentWindowMs / (24 * 3600000)).toFixed(1)}d`;
+    }
+
+    function setupChartFrame() {
+      const node = container.node();
+      const outerW = Math.max(320, node.getBoundingClientRect().width || 900);
+      plotW = outerW - margin.left - margin.right;
+      plotH = outerH - margin.top - margin.bottom;
+
+      svg.attr("width", outerW).attr("height", outerH);
+      svg.selectAll("*").remove();
+
+      const defs = svg.append("defs");
+      defs.append("clipPath")
+        .attr("id", clipId)
+        .append("rect")
+        .attr("width", plotW)
+        .attr("height", plotH);
+
+      config.series.forEach((s, i) => {
+        const gradId = `${safeId}-gradient-${s.key}`;
+        gradientIds[s.key] = gradId;
+        const gradient = defs.append("linearGradient")
+          .attr("id", gradId)
+          .attr("x1", "0%").attr("y1", "0%")
+          .attr("x2", "100%").attr("y2", "0%");
+        gradient.append("stop").attr("offset", "0%").attr("stop-color", s.color);
+        gradient.append("stop").attr("offset", "100%").attr("stop-color", s.color2 || s.color);
+      });
+
+      g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+      gridG = g.append("g").attr("class", "grid chart-grid");
+      thresholdLayer = g.append("g").attr("class", "threshold-layer");
+      zeroLine = g.append("line").attr("class", "zero-line");
+      pathLayer = g.append("g").attr("class", "path-layer").attr("clip-path", `url(#${clipId})`);
+      pointLayer = g.append("g").attr("class", "point-layer").attr("clip-path", `url(#${clipId})`);
+      xAxisG = g.append("g").attr("class", "x-axis").attr("transform", `translate(0,${plotH})`);
+      yAxisG = g.append("g").attr("class", "y-axis");
+
+      svg.append("text")
+        .attr("class", "axis-label x-label")
+        .attr("x", margin.left + plotW / 2)
+        .attr("y", outerH - 14)
+        .attr("text-anchor", "middle")
+        .text(T.timeLabel);
+
+      svg.append("text")
+        .attr("class", "axis-label y-label")
+        .attr("transform", `translate(22, ${margin.top + plotH / 2}) rotate(-90)`)
+        .attr("text-anchor", "middle")
+        .text(config.yLabel);
+
+      const legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", `translate(${Math.max(margin.left, outerW - margin.right - 145)}, 18)`);
+
+      config.series.forEach((item, i) => {
+        const group = legend.append("g").attr("transform", `translate(0, ${i * 22})`);
+        group.append("line")
+          .attr("x1", 0).attr("x2", 18)
+          .attr("y1", 8).attr("y2", 8)
+          .attr("stroke", item.color)
+          .attr("stroke-width", 4);
+        group.append("text")
+          .attr("x", 24)
+          .attr("y", 12)
+          .attr("fill", "#fff")
+          .attr("font-size", "14px")
+          .text(item.label);
+      });
+
+      focusLayer = g.append("g").attr("class", "focus-layer").style("opacity", 0);
+      focusLine = focusLayer.append("line")
+        .attr("class", "focus-line")
+        .attr("y1", 0)
+        .attr("y2", plotH);
+
+      config.series.forEach(s => {
+        focusLayer.append("circle")
+          .attr("class", `focus-circle focus-${s.key}`)
+          .attr("r", 5)
+          .attr("fill", s.color)
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 2);
+      });
+
+      overlay = g.append("rect")
+        .attr("class", "chart-overlay")
+        .attr("width", plotW)
+        .attr("height", plotH)
+        .attr("fill", "transparent");
+
+      bindInteractions();
+      initialized = true;
+    }
+
+    function bindInteractions() {
+      svg.on("mousedown", function(event) {
+        if (!currentViewStart || !currentViewEnd) return;
+        isDragging = true;
+        dragStartX = event.clientX;
+        dragStartViewStart = new Date(currentViewStart);
+        dragStartViewEnd = new Date(currentViewEnd);
+        svg.style("cursor", "grabbing");
+      });
+
+      svg.on("mousemove", function(event) {
+        if (!isDragging || !dragStartViewStart || !dragStartViewEnd) return;
+
+        const dx = event.clientX - dragStartX;
+        if (dx > DRAG_DIRECTION_THRESHOLD_PX) setHistoricalMode();
+
+        const msPerPixel = (dragStartViewEnd.getTime() - dragStartViewStart.getTime()) / plotW;
+        const deltaMs = dx * msPerPixel;
+
+        currentViewStart = new Date(dragStartViewStart.getTime() - deltaMs);
+        currentViewEnd = new Date(dragStartViewEnd.getTime() - deltaMs);
+
+        clampViewToDataRange();
+        maybeReactivateLiveFromPan();
+        redraw();
+      });
+
+      svg.on("mouseup", function() {
+        isDragging = false;
+        maybeReactivateLiveFromPan();
+        svg.style("cursor", "grab");
+        redraw();
+      });
+
+      svg.on("mouseleave", function() {
+        isDragging = false;
+        svg.style("cursor", "default");
+        focusLayer.style("opacity", 0);
+        tooltip.style("opacity", 0);
+      });
+
+      svg.on("dblclick", function() {
+        goToLatest(false);
+      });
+
+      svg.style("cursor", "grab");
+
+      svg.node().onwheel = function(event) {
+        event.preventDefault();
+        ensureViewInitialized();
+
+        const rect = svg.node().getBoundingClientRect();
+        const rawX = event.clientX - rect.left - margin.left;
+        const mouseX = clamp(rawX, 0, plotW);
+        const mouseXRel = mouseX / plotW;
+
+        const oldMs = currentViewEnd.getTime() - currentViewStart.getTime();
+        const dir = event.deltaY > 0 ? 1 : -1;
+        let newMs = Math.round(oldMs * (1 + dir * ZOOM_FACTOR));
+        newMs = clamp(newMs, MIN_WINDOW_MS, MAX_WINDOW_MS);
+
+        if (newMs === oldMs) return;
+
+        currentWindowMs = newMs;
+        const anchorMs = currentViewStart.getTime() + mouseXRel * oldMs;
+        currentViewStart = new Date(anchorMs - mouseXRel * newMs);
+        currentViewEnd = new Date(currentViewStart.getTime() + newMs);
+
+        setHistoricalMode();
+        clampViewToDataRange();
+        redraw();
+      };
+
+      overlay
+        .on("mousemove", function(event) {
+          const visibleData = getVisibleData();
+          if (!visibleData.length) return;
+
+          const [mx] = d3.pointer(event);
+          const t = x.invert(mx);
+          const closest = closestDatum(t, visibleData);
+          if (!closest) return;
+
+          const cx = x(closest.time);
+          focusLine.attr("x1", cx).attr("x2", cx);
+
+          config.series.forEach(s => {
+            focusLayer.select(`.focus-${s.key}`)
+              .attr("cx", cx)
+              .attr("cy", y(closest[s.key]));
+          });
+
+          focusLayer.style("opacity", 1);
+
+          const rows = config.series.map(s => {
+            const value = closest[s.key];
+            const formatted = s.format ? s.format(value) : formatNumber(value, 1);
+            return `<div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:${s.color};display:inline-block;"></span>
+              <span>${s.label}: <b>${formatted}</b></span>
+            </div>`;
+          }).join("");
+
+          tooltip.html(`
+            <div style="font-weight:800;color:#e0f2fe;margin-bottom:6px;">${closest.time.toLocaleTimeString()}</div>
+            <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">${closest.time.toLocaleDateString()}</div>
+            ${rows}
+          `)
+          .style("left", (event.pageX + 15) + "px")
+          .style("top", (event.pageY - 80) + "px")
+          .style("opacity", 1);
+        })
+        .on("mouseout", function() {
+          focusLayer.style("opacity", 0);
+          tooltip.style("opacity", 0);
+        });
+    }
+
+    function closestDatum(targetTime, source) {
+      if (!source.length) return null;
+      let closest = source[0];
+      let minDiff = Math.abs(source[0].time - targetTime);
+      for (let i = 1; i < source.length; i++) {
+        const diff = Math.abs(source[i].time - targetTime);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = source[i];
+        }
+      }
+      return closest;
+    }
+
+    function computeYDomain(visibleData) {
+      if (config.fixedYDomain) return config.fixedYDomain;
+
+      const source = visibleData.length ? visibleData : getData();
+      if (!source.length) return [0, 1];
+
+      const values = [];
+      source.forEach(d => {
+        config.series.forEach(s => values.push(d[s.key]));
+        if (config.includeZero) values.push(0);
+      });
+
+      let minY = d3.min(values);
+      let maxY = d3.max(values);
+      if (minY === maxY) {
+        minY -= 1;
+        maxY += 1;
+      }
+      const pad = Math.max(config.minPadding || 1, (maxY - minY) * 0.12);
+      return [minY - pad, maxY + pad];
+    }
+
+    function renderThresholds() {
+      thresholdLayer.selectAll("*").remove();
+      if (!config.thresholds) return;
+
+      config.thresholds.forEach(th => {
+        thresholdLayer.append("line")
+          .attr("class", `threshold-line ${th.className || ""}`)
+          .attr("x1", 0)
+          .attr("x2", plotW)
+          .attr("y1", y(th.value))
+          .attr("y2", y(th.value));
+
+        if (th.label) {
+          thresholdLayer.append("text")
+            .attr("class", "threshold-label")
+            .attr("x", plotW - 6)
+            .attr("y", y(th.value) - 4)
+            .attr("text-anchor", "end")
+            .text(th.label);
+        }
+      });
+    }
+
+    function redraw() {
+      const data = getData();
+      const node = container.node();
+      const currentWidth = Math.max(320, node.getBoundingClientRect().width || 900);
+      const svgWidth = Number(svg.attr("width"));
+
+      if (!initialized || Math.abs(currentWidth - svgWidth) > 5) setupChartFrame();
+
+      ensureViewInitialized();
+
+      if (autoFollowLatest && data.length > 0) {
+        const latest = getLatestTime();
+        currentViewEnd = new Date(latest);
+        currentViewStart = new Date(latest.getTime() - currentWindowMs);
+      } else {
+        clampViewToDataRange();
+      }
+
+      x.domain([currentViewStart, currentViewEnd]).range([0, plotW]);
+      const visibleData = getVisibleData();
+      y.domain(computeYDomain(visibleData)).nice().range([plotH, 0]);
+
+      gridG.call(
+        d3.axisLeft(y)
+          .ticks(7)
+          .tickSize(-plotW)
+          .tickFormat("")
+      )
+      .attr("opacity", 0.18);
+
+      xAxisG.call(
+        d3.axisBottom(x)
+          .ticks(6)
+          .tickFormat(getTickFormatter())
+          .tickSizeOuter(0)
+      );
+
+      yAxisG.call(
+        d3.axisLeft(y)
+          .ticks(7)
+          .tickFormat(config.yTickFormat || (d => d))
+          .tickSizeOuter(0)
+      );
+
+      styleChartAxis(xAxisG);
+      styleChartAxis(yAxisG);
+
+      if (config.includeZero && y.domain()[0] <= 0 && y.domain()[1] >= 0) {
+        zeroLine
+          .attr("x1", 0).attr("x2", plotW)
+          .attr("y1", y(0)).attr("y2", y(0))
+          .style("display", "block");
+      } else {
+        zeroLine.style("display", "none");
+      }
+
+      renderThresholds();
+
+      pathLayer.selectAll(".chart-series-line")
+        .data(config.series, d => d.key)
+        .join(
+          enter => enter.append("path")
+            .attr("class", d => `chart-series-line line-${d.key}`)
+            .attr("fill", "none")
+            .attr("stroke", d => `url(#${gradientIds[d.key]})`)
+            .attr("stroke-width", d => d.strokeWidth || 3)
+            .style("filter", d => d.shadow || "drop-shadow(0 0 5px rgba(0,191,255,0.22))"),
+          update => update,
+          exit => exit.remove()
+        )
+        .datum(s => visibleData.map(d => ({ time: d.time, value: d[s.key] })))
+        .transition()
+        .duration(isDragging ? 0 : 180)
+        .ease(d3.easeLinear)
+        .attr("d", d3.line()
+          .x(d => x(d.time))
+          .y(d => y(d.value))
+          .curve(d3.curveMonotoneX)
+        );
+
+      renderPoints(visibleData);
+      renderCounters(visibleData);
+
+      if (!data.length) drawEmptyMessage();
+      else g.selectAll(".empty-message").remove();
+    }
+
+    function renderPoints(visibleData) {
+      pointLayer.selectAll("*").remove();
+      if (visibleData.length > 350) return;
+
+      config.series.forEach(s => {
+        pointLayer.selectAll(`.point-${s.key}`)
+          .data(visibleData, d => `${s.key}-${d.id}`)
+          .enter()
+          .append("circle")
+          .attr("class", `data-point point-${s.key}`)
+          .attr("cx", d => x(d.time))
+          .attr("cy", d => y(d[s.key]))
+          .attr("r", s.pointRadius || 3.3)
+          .attr("fill", s.color)
+          .attr("stroke", "#ffffff")
+          .attr("stroke-width", 1)
+          .style("opacity", 0.8);
+      });
+    }
+
+    function renderCounters(visibleData) {
+      g.selectAll(".data-counter, .zoom-label").remove();
+
+      g.append("text")
+        .attr("class", "data-counter")
+        .attr("x", plotW - 10)
+        .attr("y", 20)
+        .attr("text-anchor", "end")
+        .text(`${visibleData.length} ${T.visibleCounter} / ${getData().length} ${T.totalCounter}`);
+
+      g.append("text")
+        .attr("class", "zoom-label")
+        .attr("x", 10)
+        .attr("y", 20)
+        .text(`${T.windowLabel}: ${formatWindowLabel()}`);
+    }
+
+    function drawEmptyMessage() {
+      g.selectAll(".empty-message").remove();
+      g.append("text")
+        .attr("class", "empty-message")
+        .attr("x", plotW / 2)
+        .attr("y", plotH / 2)
+        .attr("text-anchor", "middle")
+        .text(T.noData);
+    }
+
+    function styleChartAxis(axisG) {
+      axisG.selectAll("text")
+        .attr("fill", "#94a3b8")
+        .attr("font-size", "13px")
+        .attr("font-weight", "500");
+      axisG.selectAll("path,line")
+        .attr("stroke", "#00bfff")
+        .attr("opacity", 0.55);
+      axisG.select(".domain").attr("stroke", "none");
+    }
+
+    return {
+      redraw,
+      goHome: () => goToLatest(true),
+      goLatest: () => goToLatest(false),
+      resetView: () => {
+        currentViewStart = null;
+        currentViewEnd = null;
+        autoFollowLatest = true;
+        currentWindowMs = DEFAULT_WINDOW_MS;
+        redraw();
+      }
+    };
+  }
+
+  function updateAll(d) {
+    updateMetrics(d);
+    updateAlerts(d);
+    updateHabitatAreas(d.areas, d.estado);
+    updateBattery(d);
+    powerChart.redraw();
+    batteryTrendChart.redraw();
+  }
+
+  function addDataPoint(d, source) {
+    chartData.push(d);
+    chartData.sort((a, b) => a.time - b.time);
+
+    if (chartData.length > MAX_DATA_POINTS) {
+      chartData = chartData.slice(chartData.length - MAX_DATA_POINTS);
+    }
+
+    updateAll(d);
+    if (source === "realtime") setDataSource("realtime");
+  }
+
+  async function loadHistoricalData() {
+    setDataSource("loading");
+    try {
+      const response = await fetch(API_URL, { headers: { "Accept": "application/json" } });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const rows = await response.json();
+      const normalized = Array.isArray(rows) ? rows.map(normalizeEnergyData).reverse() : [];
+      chartData = normalized.slice(-MAX_DATA_POINTS);
+
+      if (chartData.length > 0) {
+        updateAll(chartData[chartData.length - 1]);
+        setDataSource("historical");
+      } else {
+        powerChart.redraw();
+        batteryTrendChart.redraw();
+        setDataSource("historical");
+      }
+    } catch (error) {
+      console.error("Error cargando histórico de energía:", error);
+      setDataSource("disconnected");
+    }
+  }
+
+  function connectWebSocket() {
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error("No se pudo crear WebSocket:", error);
+      setDataSource("disconnected");
+      return;
+    }
+
+    ws.onopen = function() {
+      isRealtimeConnected = true;
+      console.log("WebSocket Energía conectado");
+      setDataSource("realtime");
+    };
+
+    ws.onerror = function(error) {
+      console.error("Error en WebSocket de energía:", error);
+    };
+
+    ws.onclose = function() {
+      isRealtimeConnected = false;
+      console.warn("WebSocket Energía cerrado");
+      if (chartData.length > 0) setDataSource("historical");
+      else setDataSource("disconnected");
+      setTimeout(connectWebSocket, 5000);
+    };
+
+    ws.onmessage = function(event) {
+      try {
+        const raw = JSON.parse(event.data);
+
+        if (raw.sample_id && ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: "ack_metric",
+            sample_id: raw.sample_id,
+            cliente: "web"
+          }));
+        }
+
+        const data = normalizeEnergyData(raw);
+        addDataPoint(data, "realtime");
+      } catch (error) {
+        console.error("Error procesando datos de energía:", error);
+      }
+    };
+  }
+
+  document.getElementById("close-alert-btn").addEventListener("click", function() {
+    document.getElementById("energy-alert-container").style.display = "none";
+  });
+
+  window.addEventListener("resize", function() {
+    powerChart.redraw();
+    batteryTrendChart.redraw();
+  });
+
+  const updateBattery = initBatteryVisualization();
+
+  const powerChart = createInteractiveEnergyChart({
+    containerId: "#powerChartContainer",
+    height: 410,
+    yLabel: "W",
+    includeZero: true,
+    minPadding: 120,
+    yTickFormat: d => formatNumber(d, 0),
+    series: [
+      {
+        key: "solarW",
+        label: "{% trans 'Solar' %}",
+        color: "#fbbf24",
+        color2: "#fde68a",
+        strokeWidth: 3,
+        format: v => formatNumber(v, 0) + " W"
+      },
+      {
+        key: "consumoW",
+        label: "{% trans 'Consumo' %}",
+        color: "#60a5fa",
+        color2: "#93c5fd",
+        strokeWidth: 3,
+        format: v => formatNumber(v, 0) + " W"
+      },
+      {
+        key: "balanceW",
+        label: "{% trans 'Balance' %}",
+        color: "#34d399",
+        color2: "#22d3ee",
+        strokeWidth: 3.4,
+        format: v => formatNumber(v, 0) + " W"
+      }
+    ]
+  });
+
+  const batteryTrendChart = createInteractiveEnergyChart({
+    containerId: "#batteryTrendChartContainer",
+    height: 330,
+    margin: { top: 42, right: 60, bottom: 58, left: 70 },
+    yLabel: "%",
+    fixedYDomain: [0, 100],
+    yTickFormat: d => d + "%",
+    thresholds: [
+      { value: 20, label: "20%", className: "threshold-critical" },
+      { value: 40, label: "40%", className: "threshold-warning" },
+      { value: 70, label: "70%", className: "threshold-normal" }
+    ],
+    series: [
+      {
+        key: "socPct",
+        label: "{% trans 'Batería' %}",
+        color: "#10b981",
+        color2: "#00e5ff",
+        strokeWidth: 3.6,
+        pointRadius: 3.8,
+        format: v => formatNumber(v, 0) + "%"
+      }
+    ]
+  });
+
+  document.getElementById("reset-power-chart").addEventListener("click", function() {
+    powerChart.goHome();
+  });
+
+  document.getElementById("reset-battery-chart").addEventListener("click", function() {
+    batteryTrendChart.goHome();
+  });
+
+  loadHistoricalData();
+  connectWebSocket();
+});
+</script>
+{% endblock %}

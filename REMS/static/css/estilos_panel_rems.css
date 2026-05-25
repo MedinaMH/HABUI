@@ -1,0 +1,140 @@
+/* Paleta de colores y fuentes */
+:root {
+    --azul-primario: #145ca3;
+    --blanco: #ffffff;
+    --gris-fondo: #f0f2f5;
+    --gris-oscuro: #2c3e50;
+    --gris-hover: #34495e;
+    --sombra: rgba(0, 0, 0, 0.15);
+    --fuente: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Encabezado */
+.encabezado {
+    color: var(--blanco);
+    font-family: var(--fuente);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Espacio para el encabezado fijo */
+body {
+    margin: 0;
+    padding-top: 40px; /* altura del navbar fijo */
+}
+
+
+/* Ajustes para sidebar */
+.sidebar {
+    min-height: calc(100vh - 56px);
+    padding: 2rem 1rem;
+    background: linear-gradient(to bottom, #2a3c4e, #435e79);
+    border-right: 1px solid #dee2e6;
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1); /* sombra sutil hacia la derecha */
+    color: #fff; /* texto blanco para buen contraste */
+    transition: all 0.3s ease-in-out;
+}
+
+.container-fluid {
+    background-color: var(--gris-fondo);
+}
+
+.nav-link {
+    position: relative;
+    display: block;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    color: #f8f9fa;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 1.5rem;
+    text-decoration: none;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #0d6efd; /* azul Bootstrap */
+    color: #fff;
+    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    background-color: rgba(13, 110, 253, 0.2);
+    border-left: 4px solid #0d6efd;
+    color: #fff;
+}
+
+/* Asegura que el main tenga espacio interno */
+main {
+    padding-top: 2rem;
+}
+
+/* Footer siempre visible */
+/*footer {
+    position: fixed;
+    width: 100%;
+}*/
+
+/* Estados de alerta - Parpadeo */
+@keyframes blink-warning {
+    0%, 100% { 
+        border-left-color: transparent;
+        box-shadow: none;
+    }
+    50% { 
+        border-left-color: #ffc107; /* Naranja/ámbar Bootstrap warning */
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+}
+
+@keyframes blink-critical {
+    0%, 100% { 
+        border-left-color: transparent;
+        box-shadow: none;
+    }
+    50% { 
+        border-left-color: #dc3545; /* Rojo Bootstrap danger */
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+    }
+}
+
+/* Clases para activar parpadeo */
+.nav-link.warning-alert {
+    animation: blink-warning 1s infinite;
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.nav-link.critical-alert {
+    animation: blink-critical 1s infinite;
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Para mantener el borde izquierdo coloreado cuando está en parpadeo */
+.nav-link.warning-alert,
+.nav-link.critical-alert {
+    border-left: 4px solid transparent; /* Transparent para que la animación funcione */
+}
+
+/* Asegurar que el hover y active sigan funcionando incluso con alerta */
+.nav-link.warning-alert:hover,
+.nav-link.critical-alert:hover {
+    animation-play-state: paused;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.nav-link.warning-alert.active,
+.nav-link.critical-alert.active {
+    animation-play-state: paused;
+    border-left: 4px solid #0d6efd !important;
+}

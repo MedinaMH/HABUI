@@ -1,0 +1,293 @@
+.monitor-container {
+display: flex;
+flex-direction: column;
+gap: 20px;
+max-width: 1800px;
+margin: 0 auto;
+padding: 20px;
+}
+
+.monitor-header {
+text-align: center;
+margin-bottom: 20px;
+}
+
+.monitor-header h3 {
+color: #000000;
+font-weight: 600;
+font-size: 45px;
+margin-bottom: 8px;
+}
+
+.monitor-header .subtitle {
+color: #94a3b8;
+font-size: 14px;
+}
+
+.charts-grid {
+display: grid;
+grid-template-columns: 1fr 2.5fr;
+grid-template-rows: auto auto;
+gap: 30px;
+align-items: stretch;
+}
+
+.gauge-column, .series-column {
+display: flex;
+flex-direction: column;
+}
+
+.gauge-container {
+background: #0f172a;
+border: 2px solid #1e293b;
+border-radius: 16px;
+padding: 20px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+transition: transform 0.3s ease;
+flex: 1;
+display: flex;
+flex-direction: column;
+}
+
+.gauge-container:hover {
+transform: translateY(-2px);
+}
+
+.gauge-title {
+text-align: center;
+color: #ffffff;
+font-weight: 600;
+font-size: 22px;
+margin-bottom: 15px;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+}
+
+/* Contenedor específico para el gauge SVG */
+#gauge-o2 {
+flex: 1;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 520px;
+}
+
+.series-container {
+background: #0f172a;
+border: 2px solid #1e293b;
+border-radius: 16px;
+padding: 20px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+transition: transform 0.3s ease;
+flex: 1;
+display: flex;
+flex-direction: column;
+}
+
+.series-container:hover {
+transform: translateY(-2px);
+}
+
+.series-title {
+color: #ffffff;
+font-weight: 600;
+font-size: 18px;
+margin-bottom: 15px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+/* Contenedor específico para la serie SVG */
+#serie-o2 {
+flex: 1;
+min-height: 520px;
+}
+
+/* Sección de niveles de referencia para oxígeno */
+.reference-section-o2 {
+grid-column: 1 / -1;
+grid-row: 2;
+margin-top: 10px;
+background: #0f172a;
+border: 2px solid #1e293b;
+border-radius: 16px;
+padding: 25px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+/* width: 110%;
+min-height: 200px; */
+height: auto;
+}
+
+.reference-title-o2 {
+color: #ffffff;
+font-weight: 600;
+font-size: 18px;
+margin-bottom: 20px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.reference-grid-o2 {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 20px;
+}
+
+.reference-item-o2 {
+background: rgba(30, 41, 59, 0.5);
+border-radius: 12px;
+padding: 20px;
+border-left: 4px solid;
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.reference-item-o2:hover {
+transform: translateY(-3px);
+box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Actualización de colores según la especificación */
+.reference-item-o2.low {
+border-left-color: #ef4444; /* Rojo - Estado Crítico */
+background: rgba(239, 68, 68, 0.05); /* Fondo rojo muy claro */
+}
+
+.reference-item-o2.normal {
+border-left-color: #fbbf24; /* Amarillo - Advertencia */
+background: rgba(251, 191, 36, 0.05); /* Fondo amarillo muy claro */
+}
+
+.reference-item-o2.optimal {
+border-left-color: #10b981; /* Verde - Óptimo (se mantiene igual) */
+background: rgba(16, 185, 129, 0.05); /* Fondo verde muy claro */
+}
+
+.reference-header-o2 {
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 12px;
+}
+
+.reference-icon-o2 {
+width: 40px;
+height: 40px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 18px;
+font-weight: 600;
+}
+
+/* Actualización de íconos según la especificación */
+.reference-item-o2.low .reference-icon-o2 {
+background: rgba(239, 68, 68, 0.2);
+color: #ef4444; /* Rojo - Estado Crítico */
+}
+
+.reference-item-o2.normal .reference-icon-o2 {
+background: rgba(251, 191, 36, 0.2);
+color: #fbbf24; /* Amarillo - Advertencia */
+}
+
+.reference-item-o2.optimal .reference-icon-o2 {
+background: rgba(16, 185, 129, 0.2);
+color: #10b981; /* Verde - Óptimo */
+}
+
+.reference-range-o2 {
+font-size: 22px;
+font-weight: 700;
+color: #e2e8f0;
+margin-bottom: 6px;
+}
+
+.reference-label-o2 {
+font-size: 16px;
+font-weight: 600;
+margin-bottom: 8px;
+}
+
+/* Actualización de colores de etiquetas */
+.reference-item-o2.low .reference-label-o2 {
+color: #ef4444; /* Rojo - Estado Crítico */
+}
+
+.reference-item-o2.normal .reference-label-o2 {
+color: #fbbf24; /* Amarillo - Advertencia */
+}
+
+.reference-item-o2.optimal .reference-label-o2 {
+color: #10b981; /* Verde - Óptimo */
+}
+
+.reference-description-o2 {
+font-size: 13px;
+color: #94a3b8;
+line-height: 1.5;
+}
+
+.reference-recommendation-o2 {
+margin-top: 10px;
+padding: 8px 12px;
+background: rgba(255, 255, 255, 0.05);
+border-radius: 8px;
+font-size: 12px;
+color: #cbd5e1;
+border-left: 3px solid;
+}
+
+/* Actualización de bordes de recomendaciones */
+.reference-item-o2.low .reference-recommendation-o2 {
+border-left-color: #ef4444; /* Rojo - Estado Crítico */
+}
+
+.reference-item-o2.normal .reference-recommendation-o2 {
+border-left-color: #fbbf24; /* Amarillo - Advertencia */
+}
+
+.reference-item-o2.optimal .reference-recommendation-o2 {
+border-left-color: #10b981; /* Verde - Óptimo */
+}
+
+/* Asegurar que los tooltips estén por encima de todo */
+.tooltip-o2 {
+position: absolute !important;
+z-index: 9999 !important;
+pointer-events: none !important;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+.charts-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.reference-grid-o2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.monitor-container {
+    padding: 15px;
+}
+
+#gauge-o2, #serie-o2 {
+    min-height: 480px;
+}
+}
+
+@media (max-width: 768px) {
+.reference-grid-o2 {
+    grid-template-columns: 1fr;
+}
+
+.reference-section-o2 {
+    padding: 15px;
+}
+}

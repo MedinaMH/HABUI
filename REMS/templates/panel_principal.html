@@ -1,0 +1,74 @@
+{% load i18n %}
+{% load static %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+<!DOCTYPE html>
+<html lang="{{ CURRENT_LANGUAGE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Inicio" %} | {% trans "Proyecto HABUI" %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/estilos_panel.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <!-- Bootstrap Icons local -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+</head>
+<body>
+
+<header class="encabezado">
+    <div class="header-top">
+        <!-- Selector de idioma  -->
+        <div class="language-switcher">
+            <span>{% trans "Idioma" %}:</span>
+            <form action="{% url 'set_language' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <select name="language" onchange="this.form.submit()">
+                    <option value="es" {% if CURRENT_LANGUAGE == 'es' %}selected{% endif %}>ES</option>
+                    <option value="en" {% if CURRENT_LANGUAGE == 'en' %}selected{% endif %}>EN</option>
+                </select>
+            </form>
+        </div>
+
+
+        <!-- Título centrado -->
+        <h1>{% trans "PROYECTO HABUI" %}</h1>
+        <!-- {% comment %} <a href="{% url 'PWMS:panel_login' %}" class="seccion">
+            <h2>Módulo PWMS</h2>
+            <img src="{% static 'iconos/icono_pwms.gif' %}" alt="GIF del sistema PWMS" class="icon-gif">
+            <h3>Supervisa el bienestar psicológico de la tripulación</h3>
+        </a> {% endcomment %} -->
+
+    </div>
+</header>
+
+<main class="contenido">
+    <a href="{% url 'all_resources' %}" class="seccion">
+        <h2>{% trans "Módulo REMS" %}</h2> 
+        <img src="{% static 'iconos/icono_rems.gif' %}"
+            alt="{% trans 'GIF del sistema REMS' %}"
+            class="icon-gif">
+        <h3>{% trans "Supervisa el estado de los recursos esenciales" %}</h3>
+    </a>
+
+    <a  class="seccion">
+        <h2>{% trans "Módulo PWMS" %}</h2>
+        <img src="{% static 'iconos/icono_pwms.gif' %}"
+            alt="{% trans 'GIF del sistema PWMS' %}"
+            class="icon-gif">
+        <h3>{% trans "Supervisa el bienestar psicológico de la tripulación" %}</h3>
+    </a>
+
+    <!-- <a class="seccion">
+        <h2>{% trans "Módulo de Control" %}</h2>
+        <img src="{% static 'iconos/icono_pc.gif' %}"
+            alt="{% trans 'GIF del panel de control' %}"
+            class="icon-gif">
+        <h3>{% trans "Simula escenarios de riesgo, supervisa actividades y comunicación" %}</h3>
+    </a> -->
+</main>
+
+<script src="{% static 'js/bootstrap.bundle.js' %}"></script>
+</body>
+</html>

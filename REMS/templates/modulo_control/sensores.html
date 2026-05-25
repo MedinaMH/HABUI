@@ -1,0 +1,1099 @@
+{% extends "modulo_control/estructura_base_control.html" %}
+
+{% block titulo %} Simulation Control Panel {% endblock %}
+
+{% block contenido %} 
+{% load static %}
+{% load i18n %}
+
+<!-- Estilos adicionales -->
+<style>
+    .terminal {
+        background: #1e1e1e;
+        color: #0f0;
+        font-family: 'Courier New', monospace;
+        padding: 15px;
+        border-radius: 5px;
+        height: 300px;
+        overflow-y: auto;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .simulacion-card {
+        border-left: 4px solid #28a745;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .simulacion-card.detenida {
+        border-left-color: #dc3545;
+        opacity: 0.8;
+    }
+
+    .simulacion-card.finalizada {
+        border-left-color: #6c757d;
+        opacity: 0.7;
+    }
+
+    .badge-activa {
+        background-color: #28a745;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: normal;
+    }
+
+    .badge-detenida {
+        background-color: #6c757d;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: normal;
+    }
+
+    .badge-finalizada {
+        background-color: #17a2b8;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: normal;
+    }
+
+    .parametro-tag {
+        background: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        font-size: 12px;
+        display: inline-block;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        font-weight: 500;
+    }
+
+    .btn-simulacion {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+
+    .logs-preview {
+        background: #1e1e1e;
+        color: #0f0;
+        padding: 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 11px;
+        height: 80px;
+        overflow-y: auto;
+        margin-top: 10px;
+    }
+
+    .fecha-simulacion {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .campo-energia {
+        background-color: #fff8e1;
+        border: 1px solid #ffe08a;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 10px;
+    }
+
+    .campo-energia h6 {
+        color: #7a4f00;
+        font-weight: 700;
+    }
+
+    .campo-energia .form-label {
+        font-weight: 600;
+        font-size: 13px;
+        color: #343a40;
+    }
+
+    .campo-energia small {
+        display: block;
+        margin-top: 4px;
+        line-height: 1.25;
+    }
+
+    .escenario-section {
+        background-color: #e8f4f8;
+        border: 1px solid #b8e0f0;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .energy-argument-group {
+        background: rgba(255, 255, 255, 0.65);
+        border: 1px solid rgba(255, 193, 7, 0.35);
+        border-radius: 8px;
+        padding: 12px;
+        height: 100%;
+    }
+
+    .energy-argument-group-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #7a4f00;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .energy-help-text {
+        color: #6c757d;
+        font-size: 12px;
+    }
+</style>
+
+<div class="container-fluid" style="padding: 20px;">
+    <h1 class="mb-4">{% trans "Panel de simulación paramétrica" %}</h1>
+    <p class="text-muted mb-4"></p>
+
+    <!-- Tarjeta para nueva simulación -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{% trans "Configurar Ejecución Experimental" %}</h5>
+        </div>
+        <div class="card-body">
+
+            <!-- Selector de Escenarios Preconfigurados + Carga JSON + Restaurar -->
+            <div class="escenario-section mb-4">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">{% trans "Escenario Experimental Preconfigurado" %}</label>
+                        <div class="input-group">
+                            <select class="form-control" id="escenario-select">
+                                <option value="">{% trans "-- Seleccionar escenario --" %}</option>
+                                {% for esc in escenarios_disponibles %}
+                                <option value="{{ esc.id }}">{{ esc.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-primary" type="button" id="btn-cargar-escenario">
+                                <i class="fas fa-download"></i> {% trans "Cargar escenario" %}
+                            </button>
+                            <button class="btn btn-secondary" type="button" id="btn-cargar-json">
+                                <i class="fas fa-upload"></i> {% trans "Cargar JSON de escenarios" %}
+                            </button>
+                            <button class="btn btn-warning" type="button" id="btn-restaurar-escenarios">
+                                <i class="fas fa-undo-alt"></i> {% trans "Restaurar predeterminados" %}
+                            </button>
+                        </div>
+                        <small class="text-muted">{% trans "Selecciona un escenario para cargar automáticamente los parámetros" %}</small>
+                    </div>
+                </div>
+
+                <input type="file" id="json-file-input" accept=".json" style="display: none;">
+            </div>
+
+            <form id="form-nueva-simulacion" onsubmit="event.preventDefault(); iniciarSimulacion();">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">{% trans "Módulo de Simulación" %}</label>
+                        <select class="form-control" id="comando" required>
+                            <option value="">{% trans "Seleccionar..." %}</option>
+                            {% for cmd in comandos_disponibles %}
+                            <option value="{{ cmd.nombre }}">{{ cmd.descripcion }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">{% trans "Periodo de muestreo de simulación (s)" %}</label>
+                        <input type="number" class="form-control" id="intervalo" value="2" min="0.5" step="0.5">
+                    </div>
+
+                    <div class="col-md-2" id="modo-container">
+                        <label class="form-label">{% trans "Modo de variación" %}</label>
+                        <select class="form-control" id="modo">
+                            <!-- Los modos se llenarán dinámicamente -->
+                        </select>
+                    </div>
+
+                    <div class="col-md-2" id="count-container">
+                        <label class="form-label">{% trans "Número de iteraciones" %}</label>
+                        <input type="number" class="form-control" id="count" value="0" placeholder="{% trans '0 = infinito' %}">
+                    </div>
+
+                    <div class="col-md-1">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-success form-control">
+                            ▶ {% trans "Ejecutar Simulación" %}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenedor para parámetros específicos de energía -->
+                <div class="row mt-3" id="parametros-energia-container" style="display: none;">
+                    <div class="col-12">
+                        <div class="campo-energia">
+                            <h6 class="mb-3">⚡ {% trans "Configuración del Subsistema Energético Fotovoltaico" %}</h6>
+
+                            <div class="row g-3">
+                                <!-- Grupo 1: escenario y ejecución -->
+                                <div class="col-md-4">
+                                    <div class="energy-argument-group">
+                                        <div class="energy-argument-group-title">
+                                            {% trans "Escenario y duración" %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">{% trans "Modo energético" %}</label>
+                                            <select class="form-control" id="energy_mode">
+                                                <option value="normal">{% trans "Normal" %}</option>
+                                                <option value="warning">{% trans "Advertencia" %}</option>
+                                                <option value="critical">{% trans "Crítico" %}</option>
+                                            </select>
+                                            <small class="energy-help-text">
+                                                {% trans "Define la condición base de generación, consumo y descarga." %}
+                                            </small>
+                                        </div>
+
+                                        <div class="mb-0">
+                                            <label class="form-label">{% trans "Número de iteraciones" %}</label>
+                                            <input type="number" class="form-control" id="energy_count" value="0" min="0" step="1" placeholder="{% trans '0 = infinito' %}">
+                                            <small class="energy-help-text">
+                                                {% trans "0 ejecuta la simulación de forma continua hasta detenerla." %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Grupo 2: banco de baterías -->
+                                <div class="col-md-4">
+                                    <div class="energy-argument-group">
+                                        <div class="energy-argument-group-title">
+                                            {% trans "Banco de baterías" %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">{% trans "Capacidad nominal (Wh)" %}</label>
+                                            <input type="number" class="form-control" id="capacity" value="12000" step="100" min="100">
+                                            <small class="energy-help-text">
+                                                {% trans "Capacidad total de almacenamiento energético del sistema." %}
+                                            </small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">{% trans "Estado inicial de carga (SoC)" %}</label>
+                                            <input type="number" class="form-control" id="initial_soc" value="0.60" step="0.01" min="0" max="1">
+                                            <small class="energy-help-text">
+                                                {% trans "0.0 = 0% | 0.5 = 50% | 1.0 = 100%" %}
+                                            </small>
+                                        </div>
+
+                                        <div class="mb-0">
+                                            <label class="form-label">{% trans "Deriva forzada del SoC (%/min)" %}</label>
+                                            <input type="number" class="form-control" id="soc_drift" value="0" step="0.1">
+                                            <small class="energy-help-text">
+                                                {% trans "Valor negativo descarga la batería; ejemplo: -5 baja 5 puntos porcentuales por minuto." %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Grupo 3: generación, ruido y contingencia -->
+                                <div class="col-md-4">
+                                    <div class="energy-argument-group">
+                                        <div class="energy-argument-group-title">
+                                            {% trans "Generación solar y perturbación" %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">{% trans "Potencia solar máxima (W)" %}</label>
+                                            <input type="number" class="form-control" id="solar_max" value="3000" step="100" min="0">
+                                            <small class="energy-help-text">
+                                                {% trans "Potencia máxima estimada del arreglo fotovoltaico." %}
+                                            </small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">{% trans "Ruido energético simulado (Wh)" %}</label>
+                                            <input type="number" class="form-control" id="noise_wh" value="5" step="0.1" min="0">
+                                            <small class="energy-help-text">
+                                                {% trans "Perturbación aleatoria aplicada al balance energético por iteración." %}
+                                            </small>
+                                        </div>
+
+                                        <div class="mb-0">
+                                            <label class="form-label">{% trans "Modo de contingencia energética" %}</label>
+                                            <div class="form-check mt-2">
+                                                <input type="checkbox" class="form-check-input" id="low_energy_mode">
+                                                <label class="form-check-label" for="low_energy_mode">
+                                                    {% trans "Activar protocolo de contingencia energética" %}
+                                                </label>
+                                            </div>
+                                            <small class="energy-help-text">
+                                                {% trans "Envía el flag --low_energy_mode para forzar una condición de baja energía." %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campo Recurso ID -->
+                <div class="row mt-2" id="recurso-id-container">
+                    <div class="col-md-3">
+                        <label class="form-label">{% trans "Identificador del módulo" %}</label>
+                        <input type="number" class="form-control" id="recurso-id" placeholder="{% trans 'Opcional' %}">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Simulaciones Activas -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">{% trans "Simulaciones en curso" %}</h5>
+        </div>
+        <div class="card-body" id="activas-container">
+            <div class="text-center text-muted py-3">{% trans "Cargando simulaciones activas..." %}</div>
+        </div>
+    </div>
+
+    <!-- Historial de Simulaciones -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">{% trans "Historial de simulaciones" %}</h5>
+        </div>
+        <div class="card-body" id="historicas-container">
+            <div class="text-center text-muted py-3">{% trans "Cargando historial..." %}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalles de simulación -->
+<div class="modal fade" id="modalSimulacion" tabindex="-1" aria-labelledby="modalSimulacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSimulacionLabel">{% trans "Detalles de Simulación" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Cerrar' %}"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-info" class="mb-3 p-3 bg-light rounded"></div>
+                <div class="terminal" id="modal-logs" style="height: 400px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cerrar" %}</button>
+                <button type="button" class="btn btn-danger" id="btn-detener-modal" style="display: none;">⏹ {% trans "Detener" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pasar datos de Django a JavaScript -->
+{{ comandos_disponibles|json_script:"comandos-data" }}
+{{ escenarios_disponibles|json_script:"escenarios-data" }}
+
+<script>
+    const TRANSLATIONS = {
+        select_comand: "{% trans 'Primero selecciona un comando' %}",
+        no_sim_activas: "{% trans 'No hay simulaciones activas' %}",
+        sin_historial: "{% trans 'Sin historial' %}",
+    };
+
+    // Inicializar variables globales
+    let comandosDisponibles = JSON.parse(document.getElementById('comandos-data').textContent);
+    let escenariosPredeterminados = JSON.parse(document.getElementById('escenarios-data').textContent);
+    let escenariosDisponibles = [...escenariosPredeterminados]; // Copia inicial
+    window.escenariosDisponibles = escenariosDisponibles;
+
+    const WS_BASE = 'ws://' + window.location.host + '/ws/simulacion/';
+    const connections = {};
+    let modalSimulacionId = null;
+    let modalInstance = null;
+
+    const ENERGY_DEFAULTS = {
+        mode: 'normal',
+        count: 0,
+        capacity: 12000,
+        initial_soc: 0.60,
+        solar_max: 3000,
+        soc_drift: 0,
+        noise_wh: 5,
+        low_energy_mode: false
+    };
+
+    function setEnergyDefaults(force = false) {
+        const fields = [
+            ['energy_mode', ENERGY_DEFAULTS.mode],
+            ['energy_count', ENERGY_DEFAULTS.count],
+            ['capacity', ENERGY_DEFAULTS.capacity],
+            ['initial_soc', ENERGY_DEFAULTS.initial_soc],
+            ['solar_max', ENERGY_DEFAULTS.solar_max],
+            ['soc_drift', ENERGY_DEFAULTS.soc_drift],
+            ['noise_wh', ENERGY_DEFAULTS.noise_wh],
+        ];
+
+        fields.forEach(([id, defaultValue]) => {
+            const input = document.getElementById(id);
+            if (!input) return;
+
+            if (force || input.value === '' || input.value === null || input.value === undefined) {
+                input.value = defaultValue;
+            }
+        });
+
+        const lowEnergyInput = document.getElementById('low_energy_mode');
+        if (lowEnergyInput && force) {
+            lowEnergyInput.checked = ENERGY_DEFAULTS.low_energy_mode;
+        }
+    }
+
+    function isTruthyFlag(value) {
+        return value === true || value === '' || value === 'true' || value === '1' || value === 1 || value === 'on';
+    }
+
+    function setValueIfExists(id, value) {
+        const element = document.getElementById(id);
+        if (!element || value === undefined || value === null) return;
+        element.value = value;
+    }
+
+    function getNumberValue(id, fallback = null) {
+        const element = document.getElementById(id);
+        if (!element) return fallback;
+
+        const value = element.value;
+        if (value === '' || value === null || value === undefined) return fallback;
+
+        const numberValue = Number(value);
+        return Number.isNaN(numberValue) ? fallback : numberValue;
+    }
+
+    // ===========================================
+    // FUNCIÓN PARA ACTUALIZAR CAMPOS SEGÚN COMANDO
+    // ===========================================
+    function actualizarCamposPorComando() {
+        const comandoSelect = document.getElementById('comando');
+        const modoContainer = document.getElementById('modo-container');
+        const countContainer = document.getElementById('count-container');
+        const recursoIdContainer = document.getElementById('recurso-id-container');
+        const energiaContainer = document.getElementById('parametros-energia-container');
+        const modoSelect = document.getElementById('modo');
+
+        if (!comandoSelect) return;
+
+        const comandoSeleccionado = comandoSelect.value;
+        const esEnergia = comandoSeleccionado === 'simulador_fallas_energia';
+
+        if (esEnergia) {
+            // MODO ENERGÍA: ocultar campos generales y mostrar campos propios de energía
+            modoContainer.style.display = 'none';
+            countContainer.style.display = 'none';
+            recursoIdContainer.style.display = 'none';
+            energiaContainer.style.display = 'block';
+            setEnergyDefaults(false);
+        } else if (comandoSeleccionado) {
+            // MODO OTROS COMANDOS: mostrar campos normales, ocultar energía
+            modoContainer.style.display = 'block';
+            countContainer.style.display = 'block';
+            recursoIdContainer.style.display = 'block';
+            energiaContainer.style.display = 'none';
+
+            // Buscar el comando seleccionado para llenar modos
+            const comandoData = comandosDisponibles.find(c => c.nombre === comandoSeleccionado);
+
+            if (comandoData) {
+                // Limpiar y llenar opciones de modo
+                modoSelect.innerHTML = '';
+                comandoData.modos.forEach(modo => {
+                    const option = document.createElement('option');
+                    option.value = modo.valor;
+                    option.textContent = modo.nombre;
+                    modoSelect.appendChild(option);
+                });
+            }
+        } else {
+            // No hay comando seleccionado
+            modoContainer.style.display = 'block';
+            countContainer.style.display = 'block';
+            recursoIdContainer.style.display = 'block';
+            energiaContainer.style.display = 'none';
+            modoSelect.innerHTML = '<option value="">' + TRANSLATIONS.select_comand + '</option>';
+        }
+    }
+
+    // ===========================================
+    // FUNCIÓN PARA CARGAR ESCENARIO PRECONFIGURADO
+    // ===========================================
+    function cargarEscenario() {
+        const select = document.getElementById('escenario-select');
+        const selectedIndex = select.selectedIndex;
+
+        if (selectedIndex === 0) {
+            alert('Selecciona un escenario');
+            return;
+        }
+
+        // Obtener el escenario seleccionado del array global (que puede haber sido actualizado)
+        const escenario = window.escenariosDisponibles[selectedIndex - 1];  // -1 porque el primero es "Seleccionar..."
+
+        if (!escenario) return;
+
+        const comando = escenario.comando;
+        const params = escenario.parametros || {};
+
+        // Seleccionar el comando en el select
+        const comandoSelect = document.getElementById('comando');
+        comandoSelect.value = comando;
+
+        // Disparar el evento change para actualizar la interfaz
+        comandoSelect.dispatchEvent(new Event('change'));
+
+        // Esperar un momento a que la UI se actualice
+        setTimeout(() => {
+            const esEnergia = comando === 'simulador_fallas_energia';
+
+            // Cargar interval
+            if (params.interval !== undefined) {
+                document.getElementById('intervalo').value = params.interval;
+            }
+
+            if (esEnergia) {
+                setEnergyDefaults(true);
+
+                // Cargar campos de energía
+                setValueIfExists('energy_mode', params.mode ?? ENERGY_DEFAULTS.mode);
+                setValueIfExists('energy_count', params.count ?? ENERGY_DEFAULTS.count);
+                setValueIfExists('capacity', params.capacity ?? ENERGY_DEFAULTS.capacity);
+                setValueIfExists('initial_soc', params.initial_soc ?? ENERGY_DEFAULTS.initial_soc);
+                setValueIfExists('solar_max', params.solar_max ?? ENERGY_DEFAULTS.solar_max);
+                setValueIfExists('soc_drift', params.soc_drift ?? ENERGY_DEFAULTS.soc_drift);
+                setValueIfExists('noise_wh', params.noise_wh ?? ENERGY_DEFAULTS.noise_wh);
+
+                const lowEnergyInput = document.getElementById('low_energy_mode');
+                if (lowEnergyInput) {
+                    const lowEnergyValue = params.low_energy_mode ?? params.low_energy ?? ENERGY_DEFAULTS.low_energy_mode;
+                    lowEnergyInput.checked = isTruthyFlag(lowEnergyValue);
+                }
+            } else {
+                // Cargar modo para otros sensores
+                if (params.mode) {
+                    const modoSelect = document.getElementById('modo');
+
+                    // Buscar si existe el modo en las opciones
+                    for (let i = 0; i < modoSelect.options.length; i++) {
+                        if (modoSelect.options[i].value === params.mode) {
+                            modoSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                // Cargar count
+                if (params.count !== undefined) {
+                    document.getElementById('count').value = params.count;
+                }
+            }
+
+            mostrarNotificacion(`✅ Escenario "${escenario.nombre}" cargado`, 'success');
+        }, 300);
+    }
+
+    // ===========================================
+    // FUNCIÓN PARA CARGAR ESCENARIOS DESDE JSON
+    // ===========================================
+    function cargarEscenariosDesdeJSON(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const contenido = JSON.parse(e.target.result);
+
+                if (!contenido.escenarios || !Array.isArray(contenido.escenarios)) {
+                    throw new Error('El JSON debe contener un array "escenarios"');
+                }
+
+                const nuevosEscenarios = [];
+                const select = document.getElementById('escenario-select');
+
+                // Limpiar opciones existentes (excepto la primera)
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+
+                // Agregar nuevos escenarios
+                contenido.escenarios.forEach(esc => {
+                    if (!esc.id || !esc.nombre || !esc.comando || !esc.parametros) {
+                        console.warn('Escenario con estructura inválida:', esc);
+                        return;
+                    }
+                    const option = document.createElement('option');
+                    option.value = esc.id;
+                    option.textContent = esc.nombre;
+                    select.appendChild(option);
+                    nuevosEscenarios.push(esc);
+                });
+
+                if (nuevosEscenarios.length === 0) {
+                    throw new Error('No se encontraron escenarios válidos en el archivo');
+                }
+
+                // Actualizar la variable global
+                window.escenariosDisponibles = nuevosEscenarios;
+
+                mostrarNotificacion(`✅ Se cargaron ${nuevosEscenarios.length} escenarios desde el archivo.`, 'success');
+
+            } catch (error) {
+                mostrarNotificacion('❌ Error al cargar el archivo: ' + error.message, 'error');
+            }
+
+            // Limpiar el input para permitir cargar el mismo archivo nuevamente
+            document.getElementById('json-file-input').value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    // ===========================================
+    // FUNCIÓN PARA RESTAURAR ESCENARIOS PREDETERMINADOS
+    // ===========================================
+    function restaurarEscenariosPredeterminados() {
+        const select = document.getElementById('escenario-select');
+
+        // Limpiar opciones existentes (excepto la primera)
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+
+        // Volver a agregar los escenarios predeterminados
+        escenariosPredeterminados.forEach(esc => {
+            const option = document.createElement('option');
+            option.value = esc.id;
+            option.textContent = esc.nombre;
+            select.appendChild(option);
+        });
+
+        // Actualizar la variable global
+        window.escenariosDisponibles = [...escenariosPredeterminados];
+
+        mostrarNotificacion(`✅ Se restauraron ${escenariosPredeterminados.length} escenarios predeterminados.`, 'success');
+    }
+
+    // Inicializar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        actualizarListado();
+        // Actualizar cada 5 segundos
+        setInterval(actualizarListado, 5000);
+
+        // Configurar modal
+        modalInstance = new bootstrap.Modal(document.getElementById('modalSimulacion'));
+
+        // Botón detener en modal
+        document.getElementById('btn-detener-modal').addEventListener('click', function() {
+            if (modalSimulacionId) {
+                detenerSimulacion(modalSimulacionId);
+            }
+        });
+
+        // Configurar evento change para el select de comandos
+        const comandoSelect = document.getElementById('comando');
+        if (comandoSelect) {
+            comandoSelect.addEventListener('change', actualizarCamposPorComando);
+            // Ejecutar una vez al inicio
+            setTimeout(actualizarCamposPorComando, 100);
+        }
+
+        // Configurar botón de escenario
+        document.getElementById('btn-cargar-escenario').addEventListener('click', cargarEscenario);
+
+        // Configurar botón de carga JSON
+        document.getElementById('btn-cargar-json').addEventListener('click', function() {
+            document.getElementById('json-file-input').click();
+        });
+
+        // Configurar botón de restaurar predeterminados
+        document.getElementById('btn-restaurar-escenarios').addEventListener('click', restaurarEscenariosPredeterminados);
+
+        // Configurar input file para cuando se seleccione un archivo
+        document.getElementById('json-file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                cargarEscenariosDesdeJSON(file);
+            }
+        });
+    });
+
+    // Iniciar simulación
+    async function iniciarSimulacion() {
+        const comando = document.getElementById('comando').value;
+        if (!comando) {
+            alert('Selecciona un comando');
+            return;
+        }
+
+        const argumentos = {
+            interval: document.getElementById('intervalo').value
+        };
+
+        const esEnergia = comando === 'simulador_fallas_energia';
+
+        if (esEnergia) {
+            // Para energía: interval + argumentos específicos del subsistema energético
+            const energyMode = document.getElementById('energy_mode').value;
+            if (energyMode) argumentos.mode = energyMode;
+
+            const energyCount = getNumberValue('energy_count', 0);
+            if (energyCount !== null && energyCount >= 0) {
+                argumentos.count = parseInt(energyCount, 10);
+            }
+
+            const capacity = getNumberValue('capacity');
+            if (capacity !== null) argumentos.capacity = capacity;
+
+            const initialSoc = getNumberValue('initial_soc');
+            if (initialSoc !== null) argumentos.initial_soc = initialSoc;
+
+            const solarMax = getNumberValue('solar_max');
+            if (solarMax !== null) argumentos.solar_max = solarMax;
+
+            const socDrift = getNumberValue('soc_drift');
+            if (socDrift !== null) argumentos.soc_drift = socDrift;
+
+            const noiseWh = getNumberValue('noise_wh');
+            if (noiseWh !== null) argumentos.noise_wh = noiseWh;
+
+            const lowEnergyChecked = document.getElementById('low_energy_mode').checked;
+            if (lowEnergyChecked) {
+                argumentos.low_energy_mode = '';  // Flag sin valor
+            }
+        } else {
+            // Para otros comandos: mode, count, recurso-id
+            argumentos.mode = document.getElementById('modo').value;
+
+            const count = document.getElementById('count').value;
+            if (count > 0) argumentos.count = count;
+
+            const recursoId = document.getElementById('recurso-id').value;
+            if (recursoId) argumentos['recurso-id'] = recursoId;
+        }
+
+        console.log('Enviando argumentos:', argumentos);
+
+        const data = {
+            comando: comando,
+            argumentos: argumentos
+        };
+
+        try {
+            const response = await fetch('/api/simulaciones/iniciar/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                mostrarNotificacion('✅ ' + result.message, 'success');
+                actualizarListado();
+                conectarWebSocket(result.simulacion_id);
+            } else {
+                mostrarNotificacion('❌ ' + result.message, 'error');
+            }
+        } catch (error) {
+            mostrarNotificacion('Error: ' + error, 'error');
+        }
+    }
+
+    // Conectar WebSocket para una simulación
+    function conectarWebSocket(simulacionId) {
+        if (connections[simulacionId]) return;
+
+        const ws = new WebSocket(WS_BASE + simulacionId + '/');
+        connections[simulacionId] = ws;
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.tipo === 'log') {
+                if (modalSimulacionId == simulacionId) {
+                    const logsDiv = document.getElementById('modal-logs');
+                    logsDiv.innerHTML += `<div>${data.message}</div>`;
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                }
+
+                const previewDiv = document.getElementById(`logs-preview-${simulacionId}`);
+                if (previewDiv) {
+                    previewDiv.innerHTML += `<div>${data.message}</div>`;
+                    const lines = previewDiv.innerHTML.split('<div>');
+                    if (lines.length > 6) {
+                        previewDiv.innerHTML = lines.slice(-5).join('<div>');
+                    }
+                }
+            } else if (data.tipo === 'logs_historicos') {
+                if (modalSimulacionId == simulacionId) {
+                    const logsDiv = document.getElementById('modal-logs');
+                    logsDiv.innerHTML = '';
+                    data.logs.forEach(linea => {
+                        logsDiv.innerHTML += `<div>${linea}</div>`;
+                    });
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                }
+            } else if (data.tipo === 'estado') {
+                const card = document.getElementById(`card-${simulacionId}`);
+                if (card) {
+                    card.classList.remove('simulacion-card', 'detenida', 'finalizada');
+
+                    if (data.estado === 'activa') {
+                        card.classList.add('simulacion-card');
+                    } else if (data.estado === 'detenida') {
+                        card.classList.add('simulacion-card', 'detenida');
+                    } else if (data.estado === 'finalizada') {
+                        card.classList.add('simulacion-card', 'finalizada');
+                    }
+                }
+
+                if (modalSimulacionId == simulacionId && data.estado !== 'activa') {
+                    document.getElementById('btn-detener-modal').style.display = 'none';
+                }
+            }
+        };
+
+        ws.onclose = function() {
+            delete connections[simulacionId];
+        };
+    }
+
+    // Actualizar listado de simulaciones
+    async function actualizarListado() {
+        try {
+            const response = await fetch('/api/simulaciones/listar/');
+            const data = await response.json();
+
+            const activas = data.simulaciones.filter(s => s.estado === 'activa');
+            const historicas = data.simulaciones.filter(s => s.estado !== 'activa').slice(0, 6);
+
+            const activasContainer = document.getElementById('activas-container');
+            if (activas.length === 0) {
+                activasContainer.innerHTML = '<p class="text-muted text-center py-3">' + TRANSLATIONS.no_sim_activas + '</p>';
+            } else {
+                let html = '<div class="row">';
+                activas.forEach(sim => {
+                    html += `<div class="col-md-6 mb-3">${generarTarjetaSimulacion(sim, true)}</div>`;
+                    if (!connections[sim.id]) {
+                        conectarWebSocket(sim.id);
+                    }
+                });
+                html += '</div>';
+                activasContainer.innerHTML = html;
+            }
+
+            const historicasContainer = document.getElementById('historicas-container');
+            if (historicas.length === 0) {
+                historicasContainer.innerHTML = '<p class="text-muted text-center py-3">' + TRANSLATIONS.sin_historial + '</p>';
+            } else {
+                let html = '<div class="row">';
+                historicas.forEach(sim => {
+                    html += `<div class="col-md-4 mb-3">${generarTarjetaSimulacion(sim, false)}</div>`;
+                });
+                html += '</div>';
+                historicasContainer.innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Error actualizando listado:', error);
+        }
+    }
+
+    // Generar HTML para tarjeta de simulación
+    function generarTarjetaSimulacion(sim, activa) {
+        const fecha = new Date(sim.inicio).toLocaleString();
+
+        let badgeClass = 'badge-activa';
+        let badgeText = 'ACTIVA';
+
+        if (!activa) {
+            if (sim.estado === 'detenida') {
+                badgeClass = 'badge-detenida';
+                badgeText = 'DETENIDA';
+            } else {
+                badgeClass = 'badge-finalizada';
+                badgeText = 'FINALIZADA';
+            }
+        }
+
+        let argsHtml = '';
+        for (let [key, value] of Object.entries(sim.argumentos || {})) {
+            if (key === 'low_energy_mode' && value === '') {
+                argsHtml += `<span class="parametro-tag">--${key}</span>`;
+            } else {
+                argsHtml += `<span class="parametro-tag">--${key} ${value}</span>`;
+            }
+        }
+
+        const cardClass = activa ? 'simulacion-card' : `simulacion-card ${sim.estado}`;
+
+        return `
+            <div class="card ${cardClass}" id="card-${sim.id}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">${sim.comando}</h6>
+                        <span class="${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="mb-2">
+                        ${argsHtml || '<span class="text-muted">Sin argumentos</span>'}
+                    </div>
+                    <div class="fecha-simulacion mb-2">
+                        <i class="fas fa-clock"></i> ${fecha}
+                        ${sim.pid ? ` | PID: ${sim.pid}` : ''}
+                    </div>
+
+                    ${activa ? `
+                        <div class="logs-preview" id="logs-preview-${sim.id}">
+                            <!-- Logs aparecerán aquí -->
+                        </div>
+                    ` : ''}
+
+                    <div class="mt-3">
+                        <button onclick="verDetalle('${sim.id}')" class="btn btn-sm btn-info btn-simulacion">
+                            👁 Ver detalles
+                        </button>
+                        ${activa ? `
+                            <button onclick="detenerSimulacion('${sim.id}')" class="btn btn-sm btn-danger btn-simulacion">
+                                ⏹ Detener
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Ver detalle en modal
+    async function verDetalle(simulacionId) {
+        modalSimulacionId = simulacionId;
+
+        try {
+            const response = await fetch(`/api/simulaciones/${simulacionId}/`);
+
+            if (!response.ok) {
+                throw new Error('Simulación no encontrada');
+            }
+
+            const data = await response.json();
+
+            const fechaInicio = new Date(data.inicio).toLocaleString();
+            document.getElementById('modal-info').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Comando:</strong> ${data.comando}<br>
+                        <strong>Estado:</strong> <span class="badge-${data.estado === 'activa' ? 'activa' : 'detenida'}">${data.estado.toUpperCase()}</span><br>
+                        <strong>PID:</strong> ${data.pid || 'N/A'}<br>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Inicio:</strong> ${fechaInicio}<br>
+                        <strong>Argumentos:</strong><br>
+                        ${Object.entries(data.argumentos || {}).map(([k,v]) => {
+                            if (k === 'low_energy_mode' && v === '') {
+                                return `<span class="parametro-tag">--${k}</span>`;
+                            } else {
+                                return `<span class="parametro-tag">--${k} ${v}</span>`;
+                            }
+                        }).join('') || 'Ninguno'}
+                    </div>
+                </div>
+            `;
+
+            const logsDiv = document.getElementById('modal-logs');
+            logsDiv.innerHTML = '';
+            data.logs.forEach(linea => {
+                if (linea.trim()) {
+                    logsDiv.innerHTML += `<div>${linea}</div>`;
+                }
+            });
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+
+            document.getElementById('btn-detener-modal').style.display = 
+                data.estado === 'activa' ? 'inline-block' : 'none';
+
+            modalInstance.show();
+
+            if (data.estado === 'activa' && !connections[simulacionId]) {
+                conectarWebSocket(simulacionId);
+            }
+
+        } catch (error) {
+            mostrarNotificacion('Error cargando detalles: ' + error, 'error');
+        }
+    }
+
+    // Detener simulación
+    async function detenerSimulacion(simulacionId) {
+        if (!confirm('¿Detener esta simulación?')) return;
+
+        try {
+            const response = await fetch(`/api/simulaciones/detener/${simulacionId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            const result = await response.json();
+            mostrarNotificacion(result.message, result.status);
+
+            if (connections[simulacionId]) {
+                connections[simulacionId].close();
+                delete connections[simulacionId];
+            }
+
+            if (modalSimulacionId == simulacionId) {
+                modalInstance.hide();
+            }
+
+            actualizarListado();
+
+        } catch (error) {
+            mostrarNotificacion('Error: ' + error, 'error');
+        }
+    }
+
+    // Utilidad para CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Mostrar notificaciones
+    function mostrarNotificacion(mensaje, tipo) {
+        alert(mensaje);
+    }
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+{% endblock %}

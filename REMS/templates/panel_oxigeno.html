@@ -1,0 +1,110 @@
+{% extends "estructura_base.html" %}
+{% load i18n %}
+{% block titulo %}Sistema REMS{% endblock %}
+
+{% block contenido %}
+{% load static %}
+<!-- oxygen_monitor.html -->
+<script src="{% static 'js/d3.js' %}"></script>
+<script>
+  const TRANSLATIONS = {
+    nivel_optimo: "{% trans 'NIVEL ÓPTIMO' %}",
+    nivel_aceptable: "{% trans 'NIVEL ACEPTABLE' %}",
+    hist_o2: "{% trans 'HISTÓRICO DE OXÍGENO' %}",
+    tiempo: "{% trans 'Tiempo' %}",
+  };
+</script>
+<script src="{% static 'js/o2.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/estilos_view_O2.css' %}">
+
+<div class="monitor-container">
+  <!-- Encabezado -->
+  <div class="monitor-header">
+    <h3>{% trans "Monitoreo de los niveles de Oxígeno" %}</h3>
+    <!-- <div class="subtitle">Sistema de monitoreo en tiempo real de niveles de oxígeno atmosférico</div> -->
+  </div>
+  
+  <!-- Grid principal de gráficos -->
+  <div class="charts-grid">
+    <!-- Columna izquierda: Gauge -->
+    <div class="gauge-column">
+      <div class="gauge-container">
+        <div class="gauge-title">
+          <span></span>
+        </div>
+        <div id="gauge-o2"></div>
+      </div>
+    </div>
+    
+    <!-- Columna derecha: Serie temporal -->
+    <div class="series-column">
+      <div class="series-container">
+        <!-- <div class="series-title">
+          <span>Histórico de Concentración</span>
+        </div> -->
+        <div id="serie-o2"></div>
+      </div>
+    </div>
+    
+    <!-- Sección de niveles de referencia para oxígeno -->
+    <div class="reference-section-o2">
+      <div class="reference-title-o2">
+        <span>{% trans "Niveles de Referencia de Oxígeno" %}</span>
+      </div>
+      <div class="reference-grid-o2">
+        <div class="reference-item-o2 low">
+          <div class="reference-header-o2">
+            <div class="reference-icon-o2"></div>
+            <div>
+              <div class="reference-range-o2">&lt; 17.0 % o &gt; 25.0 %</div>
+              <div class="reference-label-o2">{% trans "ESTADO CRÍTICO" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description-o2">
+            Riesgo severo de hipoxia o incendios. Condiciones peligrosas para la salud humana.
+          </div>
+          <div class="reference-recommendation-o2">
+            Evacuación inmediata recomendada. Acción correctiva urgente requerida.
+          </div> -->
+        </div>
+        
+        <div class="reference-item-o2 normal">
+          <div class="reference-header-o2">
+            <div class="reference-icon-o2"></div>
+            <div>
+              <div class="reference-range-o2">
+                <div>17.0 - 19.4 %</div>
+                <div>23.6 - 25.0 %</div>
+              </div>
+              <div class="reference-label-o2">{% trans "ADVERTENCIA" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description-o2">
+            Riesgo fisiológico leve o aumento de riesgo de combustión. Condiciones que requieren monitoreo cuidadoso.
+          </div>
+          <div class="reference-recommendation-o2">
+            Mejorar ventilación. Evaluar fuentes de riesgo de combustión.
+          </div> -->
+        </div>
+        
+        <div class="reference-item-o2 optimal">
+          <div class="reference-header-o2">
+            <div class="reference-icon-o2"></div>
+            <div>
+              <div class="reference-range-o2">19.5 - 23.5 %</div>
+              <div class="reference-label-o2">{% trans "NIVEL ÓPTIMO" %}</div>
+            </div>
+          </div>
+          <!-- <div class="reference-description-o2">
+            Rango aceptado para ocupación humana segura en ambientes cerrados. Condiciones óptimas para la salud y seguridad.
+          </div>
+          <div class="reference-recommendation-o2">
+            Condiciones ideales mantenidas. Continuar con monitoreo regular.
+          </div> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

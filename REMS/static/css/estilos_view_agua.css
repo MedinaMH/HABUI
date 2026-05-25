@@ -1,0 +1,320 @@
+/* Estilos para el monitoreo del tanque de agua */
+.monitor-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.monitor-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.monitor-header h3 {
+    color: #000000;
+    font-weight: 600;
+    font-size: 45px;
+    margin-bottom: 8px;
+}
+
+.monitor-header .subtitle {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 2.5fr; /* Cambiado de 1.2fr 2fr a 1fr 2.5fr */
+    grid-template-rows: auto auto;
+    gap: 30px;
+    align-items: stretch;
+}
+
+.tank-column, .series-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.tank-container {
+    background: #0f172a;
+    border: 2px solid #1e293b;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.tank-container:hover {
+    transform: translateY(-2px);
+}
+
+.tank-title {
+    text-align: center;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Contenedor específico para el tanque SVG */
+#grafico-tanque {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 520px;
+}
+
+.series-container {
+    background: #0f172a;
+    border: 2px solid #1e293b;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.series-container:hover {
+    transform: translateY(-2px);
+}
+
+.series-title {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Contenedor específico para la serie SVG */
+#serie-temporal {
+    flex: 1;
+    min-height: 520px;
+    width: 100%; /* Asegurar que use todo el ancho disponible */
+}
+
+/* Sección de niveles de referencia para agua */
+.reference-section-water {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 10px;
+    background: #0f172a;
+    border: 2px solid #1e293b;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    width: 100%; /* Asegurar ancho completo */
+}
+
+.reference-title-water {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reference-grid-water {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%; /* Asegurar ancho completo */
+}
+
+.reference-item-water {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.reference-item-water:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.reference-item-water.critical {
+    border-left-color: #ff4444;
+}
+
+.reference-item-water.low {
+    border-left-color: #ffaa00;
+}
+
+.reference-item-water.normal {
+    border-left-color: #00bfff;
+}
+
+.reference-item-water.optimal {
+    border-left-color: #00cc66;
+}
+
+.reference-header-water {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.reference-icon-water {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.reference-item-water.critical .reference-icon-water {
+    background: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
+}
+
+.reference-item-water.low .reference-icon-water {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+}
+
+.reference-item-water.normal .reference-icon-water {
+    background: rgba(0, 191, 255, 0.2);
+    color: #00bfff;
+}
+
+.reference-item-water.optimal .reference-icon-water {
+    background: rgba(0, 204, 102, 0.2);
+    color: #00cc66;
+}
+
+.reference-range-water {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+}
+
+.reference-label-water {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.reference-item-water.critical .reference-label-water {
+    color: #ff4444;
+}
+
+.reference-item-water.low .reference-label-water {
+    color: #ffaa00;
+}
+
+.reference-item-water.normal .reference-label-water {
+    color: #00bfff;
+}
+
+.reference-item-water.optimal .reference-label-water {
+    color: #00cc66;
+}
+
+.reference-description-water {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.reference-recommendation-water {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 12px;
+    color: #cbd5e1;
+    border-left: 3px solid;
+}
+
+.reference-item-water.critical .reference-recommendation-water {
+    border-left-color: #ff4444;
+}
+
+.reference-item-water.low .reference-recommendation-water {
+    border-left-color: #ffaa00;
+}
+
+.reference-item-water.normal .reference-recommendation-water {
+    border-left-color: #00bfff;
+}
+
+.reference-item-water.optimal .reference-recommendation-water {
+    border-left-color: #00cc66;
+}
+
+/* Estilos específicos para puntos de datos */
+.data-point {
+    cursor: pointer;
+    transition: r 0.2s ease, fill 0.3s ease;
+}
+
+.data-point:hover {
+    r: 6 !important;
+}
+
+/* Tooltip específico para agua */
+.tooltip-water {
+    position: absolute !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+}
+
+/* Sombras para los SVG */
+#grafico-tanque svg, #serie-temporal svg {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .reference-grid-water {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .monitor-container {
+        padding: 15px;
+        max-width: 95%;
+    }
+    
+    #grafico-tanque, #serie-temporal {
+        min-height: 480px;
+    }
+}
+
+@media (max-width: 768px) {
+    .reference-grid-water {
+        grid-template-columns: 1fr;
+    }
+    
+    .reference-section-water {
+        padding: 15px;
+    }
+}

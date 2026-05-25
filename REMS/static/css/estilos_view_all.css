@@ -1,0 +1,590 @@
+/* ===== ESTILOS GENERALES DEL SISTEMA DE MONITOREO ===== */
+body, html {
+    margin: 20;
+    padding: 20;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+}
+
+
+.dashboard-header {
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 12px;
+    padding: 20px 30px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-indicators {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status.online {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+#last-update {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+/* ===== LAYOUT RESPONSIVO 3x2 PARA REMS ===== */
+:root {
+    --rems-top-offset: 24px;
+    --rems-gap: clamp(10px, 1vw, 18px);
+    --rems-card-padding: clamp(10px, 1vw, 16px);
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    min-height: 100dvh;
+}
+
+/* Grid principal: 3 columnas x 2 filas en escritorio */
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: var(--rems-gap);
+
+    width: 100%;
+    height: calc(100dvh - var(--rems-top-offset));
+    min-height: 0;
+
+    padding: clamp(8px, 1vw, 16px);
+    margin: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* ===== TARJETAS DE RECURSOS ===== */
+.resource-card {
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: 16px;
+    padding: var(--rems-card-padding);
+    border: 1px solid #334155;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.resource-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== HEADER DE TARJETAS ===== */
+.card-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-bottom: clamp(6px, 0.8vh, 12px);
+    padding-bottom: clamp(6px, 0.8vh, 12px);
+    border-bottom: 1px solid #334155;
+
+    flex-shrink: 0;
+    min-height: auto;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: clamp(1rem, 1.25vw, 1.55rem);
+    line-height: 1.1;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+/* ===== CONTENEDORES DE GAUGES ===== */
+.bateria-gauge-container,
+.agua-gauge-container,
+.temp-gauge-container,
+.hum-gauge-container,
+.oxigeno-gauge-container,
+.co2-gauge-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+    position: relative;
+}
+
+/* El div interno de agua con escalado */
+#tanque-agua,
+#oxigeno-gauge,
+#co2-gauge,
+#temperatura-gauge,
+#humedad-gauge {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Escalado general de SVG */
+.bateria-gauge-container svg,
+.agua-gauge-container svg,
+.temp-gauge-container svg,
+.hum-gauge-container svg,
+.oxigeno-gauge-container svg,
+.co2-gauge-container svg {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+}
+
+/* Batería: evita que el número grande empuje la tarjeta */
+.battery-percentage-large {
+    font-size: clamp(1.35rem, 2.2vw, 2.4rem);
+    font-weight: 800;
+    color: #10b981;
+    margin-top: clamp(-42px, -4vh, -18px);
+    margin-bottom: 0;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    padding-top: 0;
+    flex-shrink: 0;
+}
+
+/* ===== FOOTER DE TARJETAS ===== */
+.card-footer {
+    margin-top: clamp(4px, 0.6vh, 8px);
+    padding: clamp(5px, 0.7vh, 8px) 0 0 0;
+    border-top: 1px solid #334155;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(6px, 0.8vw, 12px);
+
+    flex-shrink: 0;
+    min-height: auto;
+}
+
+.stat {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.stat-label {
+    font-size: clamp(0.95rem, 1.05vw, 1.25rem);
+    color: #ffffff;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: clamp(0.9rem, 1.05vw, 1.25rem);
+    font-weight: 700;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== COLORES POR RECURSO ===== */
+.bateria .card-header h2,
+.agua .card-header h2,
+.aire .card-header h2,
+.temperatura .card-header h2,
+.humedad .card-header h2,
+.oxigeno .card-header h2,
+.co2 .card-header h2 {
+    color: #ffffff;
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* Pantallas medianas: 2 columnas, se permite scroll */
+@media (max-width: 1200px) {
+    .grid-layout {
+        height: auto;
+        min-height: auto;
+        overflow: visible;
+        grid-template-columns: repeat(2, minmax(280px, 1fr));
+        grid-template-rows: none;
+    }
+
+    .resource-card {
+        height: clamp(360px, 50vh, 520px);
+    }
+}
+
+/* Pantallas pequeñas: 1 columna */
+@media (max-width: 760px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+
+    .resource-card {
+        height: clamp(360px, 55vh, 520px);
+        padding: 12px;
+    }
+
+    .card-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .card-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+    }
+
+    .stat-value {
+        font-size: 1rem;
+    }
+}
+
+/* Pantallas muy altas o navegador maximizado: se aprovecha mejor el espacio */
+@media (min-width: 1400px) and (min-height: 850px) {
+    .card-header h2 {
+        font-size: clamp(1.25rem, 1.35vw, 1.8rem);
+    }
+
+    .stat-label {
+        font-size: clamp(0.95rem, 1vw, 1.2rem);
+    }
+
+    .stat-value {
+        font-size: clamp(1.05rem, 1.15vw, 1.4rem);
+    }
+
+    .battery-percentage-large {
+        font-size: clamp(1.8rem, 2.3vw, 2.8rem);
+    }
+}
+
+/* ===== PANEL DE ALERTAS ===== */
+.alerts-panel {
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #334155;
+}
+
+.alerts-panel h3 {
+    margin: 0 0 15px 0;
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#alerts-container {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.alert-item {
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: rgba(71, 85, 105, 0.3);
+    border-left: 4px solid;
+}
+
+.alert-item.info {
+    border-left-color: #38bdf8;
+}
+
+.alert-item.warning {
+    border-left-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.alert-item.critical {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.alert-item i {
+    font-size: 1.1rem;
+}
+
+.alert-time {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+/* ===== CONEXIÓN STATUS ===== */
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+}
+
+.connection-status.connected {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.connection-status.disconnected {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1400px) {
+    .grid-layout {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .aire-subgrid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .resource-card {
+        min-height: auto;
+    }
+    
+    .agua-gauge-container,
+    .temp-gauge-container,
+    .hum-gauge-container {
+        min-height: 450px;
+    }
+}
+
+@media (max-width: 600px) {
+    /* .monitoreo-container {
+        padding: 10px;
+    } */
+    
+    .resource-card {
+        padding: 15px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .card-header h2 {
+        font-size: 1.2rem;
+    }
+}
+
+/* ===== SCROLLBAR PERSONALIZADO ===== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e293b;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* ===== ESTILOS PARA BATERÍA ===== */
+.bateria .card-header h2 { 
+    color: #ffffff; 
+}
+
+.bateria-gauge-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 480px;
+    width: 100%;
+    position: relative;
+}
+
+.bateria-gauge-container svg {
+    max-width: 100%;
+    max-height: 400px;
+}
+
+.battery-percentage-large {
+    font-size: 42px;
+    font-weight: 800;
+    color: #10b981;
+    margin-top: -50px;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    padding-top: 20px;
+}
+
+/* Colores para estados de batería */
+.battery-status-normal { color: #10b981; }
+.battery-status-warning { color: #f59e0b; }
+.battery-status-critical { color: #ef4444; }
+
+/* =====CENTRAR Y ESCALAR GAUGES SVG ===== */
+.bateria-gauge-container,
+.agua-gauge-container,
+.oxigeno-gauge-container,
+.co2-gauge-container,
+.temp-gauge-container,
+.hum-gauge-container {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100%;
+    height: 100%;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Contenedores internos creados para D3 */
+#tanque-agua,
+#oxigeno-gauge,
+#co2-gauge,
+#temperatura-gauge,
+#humedad-gauge {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* SVG responsivos */
+.bateria-gauge-container svg,
+.agua-gauge-container svg,
+.oxigeno-gauge-container svg,
+.co2-gauge-container svg,
+.temp-gauge-container svg,
+.hum-gauge-container svg {
+    display: block !important;
+    margin: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain;
+}
+
+/* Evita que el número de batería empuje el SVG */
+.bateria-gauge-container {
+    flex-direction: column;
+}
+
+.battery-percentage-large {
+    flex-shrink: 0;
+    margin-top: clamp(-45px, -4vh, -20px);
+}
+#battery-percentage-large,
+.battery-percentage-large {
+    font-size: 40px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+/* ===== BAJAR GAUGES CUANDO EL NAVEGADOR ESTÁ MAXIMIZADO ===== */
+@media (min-width: 1200px) and (min-height: 800px) {
+    .bateria-gauge-container,
+    .agua-gauge-container,
+    .oxigeno-gauge-container,
+    .co2-gauge-container,
+    .temp-gauge-container,
+    .hum-gauge-container {
+        transform: translateY(25px);
+    }
+}

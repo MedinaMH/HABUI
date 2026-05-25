@@ -1,0 +1,695 @@
+{% extends "modulo_control/estructura_base_control.html" %}
+
+{% block titulo %} Administracion de alimentos{% endblock %}
+
+{% block contenido %} 
+{% load static %}
+
+<script src="{% static 'js/d3.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/estilos_view_alimentos.css' %}">
+
+<!-- Notificación flotante -->
+<div id="notification" class="notification" style="display: none;"></div>
+
+<div class="dashboard-container">
+<div class="dashboard-header" style="padding-top: 5px; padding-bottom: 15px;">
+<h1 class="dashboard-title">Administración de Alimentos</h1>
+</div>
+
+<!-- Panel de Administración -->
+<div class="chart-panel" style="margin-top: 20px;">
+<h3 style="color: #ffffff; margin-top: 0; margin-bottom: 20px;">Administración del Sistema de Alimentos</h3>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+<!-- Configuración de Tripulación -->
+<div style="background: rgba(30, 41, 59, 0.7); border-radius: 10px; padding: 20px;">
+<h4 style="color: #ffa8a8; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+    <span>Configurar Tripulación</span>
+</h4>
+
+<div class="form-group">
+    <label class="form-label">Número de Tripulantes</label>
+    <input type="number" id="configure-crew-size" class="form-input" min="1" max="6" value="4" style="text-align: center;">
+    <div style="color: #9ca3af; font-size: 12px; margin-top: 5px;">
+    Rango permitido: 1 a 6 tripulantes
+    </div>
+</div>
+
+<button id="btn-configure-crew" class="btn-primary" style="background: #3b82f6; margin-top: 10px;">
+    Actualizar Tripulación
+</button>
+
+<div style="margin-top: 15px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; border-left: 4px solid #3b82f6;">
+    <div style="color: #fff; font-size: 12px;">
+    <strong>Nota:</strong> Esto actualizará el número de tripulantes en el sistema.
+    El consumo esperado se recalculará automáticamente.
+    </div>
+</div>
+</div>
+
+<!-- Configuración de Suministros -->
+<div style="background: rgba(30, 41, 59, 0.7); border-radius: 10px; padding: 20px;">
+<h4 style="color: #ffa8a8; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+    <span>Configurar Suministros</span>
+</h4>
+
+<div class="form-group">
+    <label class="form-label">Porciones Iniciales Totales</label>
+    <input type="number" id="configure-initial-portions" class="form-input" min="1" max="1000" value="112" style="text-align: center;">
+    <div style="color: #9ca3af; font-size: 12px; margin-top: 5px;">
+    Ejemplo: 4 tripulantes × 4 comidas × 7 días = 112 porciones
+    </div>
+</div>
+
+<button id="btn-configure-portions" class="btn-primary" style="background: #10b981; margin-top: 10px;">
+    Actualizar Suministros
+</button>
+
+<div style="margin-top: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border-left: 4px solid #10b981;">
+    <div style="color: #fff; font-size: 12px;">
+    <strong>Nota:</strong> Esto actualizará el total de porciones iniciales en la base de datos.
+    </div>
+</div>
+</div>
+</div>
+
+<!-- Panel de Administración de Datos -->
+<div style="background: rgba(30, 41, 59, 0.7); border-radius: 10px; padding: 20px; margin-top: 20px;">
+<h4 style="color: #ffa8a8; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+<span>Administración de Datos</span>
+</h4>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+<!-- Botón para borrar registros -->
+<div style="text-align: center;">
+    <button id="btn-clear-records" class="btn-primary" style="background: #f59e0b;">
+    Borrar Registros de Consumo
+    </button>
+    <div style="color: #9ca3af; font-size: 12px; margin-top: 8px;">
+    Elimina todos los registros de consumo pero mantiene los suministros
+    </div>
+</div>
+
+<!-- Botón para reiniciar completamente -->
+<div style="text-align: center;">
+    <button id="btn-reset-all" class="btn-primary" style="background: #ef4444;">
+    Reiniciar Sistema Completo
+    </button>
+    <div style="color: #9ca3af; font-size: 12px; margin-top: 8px;">
+    Reinicia suministros, registros y tripulación (restaura valores por defecto)
+    </div>
+</div>
+</div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="confirmation-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center;">
+<div id="modal-content" style="background: #1f2937; border-radius: 10px; padding: 30px; max-width: 500px; width: 90%; border: 2px solid #ff6b6b;">
+<h3 style="color: #fff; margin-top: 0; margin-bottom: 15px;" id="modal-title">Confirmar Operación</h3>
+<p style="color: #ffa8a8; margin-bottom: 20px;" id="modal-message">
+    ¿Está seguro de que desea realizar esta operación?
+</p>
+<div style="display: flex; gap: 10px; justify-content: flex-end;">
+    <button id="modal-cancel" style="padding: 10px 20px; background: #4b5563; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+    Cancelar
+    </button>
+    <button id="modal-confirm" style="padding: 10px 20px; background: #ef4444; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+    Confirmar
+    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURACIÓN INICIAL
+// ============================================
+document.addEventListener("DOMContentLoaded", function() {
+const CONFIG = {
+mealsPerDayPerPerson: 4,
+totalMissionDays: 7,
+maxCrew: 6,
+minCrew: 1,
+defaultCrewSize: 4,
+defaultInitialPortions: 112 // 4 tripulantes × 4 comidas × 7 días
+};
+
+// ============================================
+// ESTADO GLOBAL DE LA APLICACIÓN
+// ============================================
+let appState = {
+remainingPortions: 0,
+initialPortions: 0,
+porcentajeRestante: 0,
+autonomyDays: 0,
+currentCrewSize: CONFIG.defaultCrewSize
+};
+
+// Variables globales para acciones pendientes
+let pendingActionType = null;
+let pendingActionData = null;
+
+// ============================================
+// FUNCIONES AUXILIARES
+// ============================================
+
+function getCookie(name) {
+let cookieValue = null;
+if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+    }
+    }
+}
+return cookieValue;
+}
+
+function showNotification(message, type = "success") {
+const notification = document.getElementById("notification");
+if (!notification) {
+    console.log("No se encontró el elemento de notificación");
+    return;
+}
+
+notification.textContent = message;
+notification.className = "notification";
+
+if (type === "error") {
+    notification.style.backgroundColor = "#ef4444";
+    notification.style.color = "#fff";
+} else if (type === "warning") {
+    notification.style.backgroundColor = "#f59e0b";
+    notification.style.color = "#fff";
+} else {
+    notification.style.backgroundColor = "#10b981";
+    notification.style.color = "#fff";
+}
+
+notification.style.display = "block";
+notification.style.position = "fixed";
+notification.style.top = "20px";
+notification.style.right = "20px";
+notification.style.padding = "15px 20px";
+notification.style.borderRadius = "8px";
+notification.style.zIndex = "9999";
+notification.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+notification.style.fontWeight = "600";
+
+setTimeout(() => {
+    notification.style.display = "none";
+}, 3000);
+}
+
+// ============================================
+// FUNCIONES PARA EL MODAL DE CONFIRMACIÓN (REVISADO)
+// ============================================
+
+function showConfirmationModal(title, message, actionType, actionData = null) {
+console.log('showConfirmationModal llamado con:', { title, actionType, actionData });
+
+const modal = document.getElementById('confirmation-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalMessage = document.getElementById('modal-message');
+
+if (!modal || !modalTitle || !modalMessage) {
+    console.error("Elementos del modal no encontrados");
+    return;
+}
+
+modalTitle.textContent = title;
+modalMessage.textContent = message;
+modal.style.display = 'flex';
+
+// Guardar en variables globales
+pendingActionType = actionType;
+pendingActionData = actionData;
+
+console.log('pendingActionType establecido a:', pendingActionType);
+console.log('pendingActionData establecido a:', pendingActionData);
+}
+
+function hideConfirmationModal() {
+const modal = document.getElementById('confirmation-modal');
+if (modal) {
+    modal.style.display = 'none';
+}
+
+}
+
+// ============================================
+// FUNCIONES PARA OBTENER ESTADO ACTUAL
+// ============================================
+
+async function obtenerEstadoAlimentos() {
+try {
+    const response = await fetch('/api/alimentos/estado/');
+    if (!response.ok) throw new Error('Error al obtener estado');
+    
+    const data = await response.json();
+    
+    appState.remainingPortions = data.porciones_actuales;
+    appState.initialPortions = data.porciones_iniciales;
+    appState.porcentajeRestante = data.porcentaje_restante;
+    appState.autonomyDays = data.dias_autonomia;
+    
+    if (data.num_tripulantes) {
+    appState.currentCrewSize = data.num_tripulantes;
+    }
+    
+    return { success: true, data: data };
+} catch (error) {
+    console.error('Error cargando estado:', error);
+    showNotification('Error al cargar datos de alimentos', 'error');
+    return { success: false, error: error.message };
+}
+}
+
+// ============================================
+// FUNCIONES DE ACCIÓN (CONEXIÓN CON LA BD)
+// ============================================
+
+async function configureCrewSize(newCrewSize) {
+try {
+    console.log("Enviando solicitud para configurar tripulación:", newCrewSize);
+    
+    const response = await fetch('/api/alimentos/configurar-tripulacion/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+        tripulantes: parseInt(newCrewSize)
+    })
+    });
+    
+    const data = await response.json();
+    console.log("Respuesta de configurar tripulación:", data);
+    
+    if (response.ok && data.success) {
+    appState.currentCrewSize = newCrewSize;
+    await obtenerEstadoAlimentos();
+    showNotification(`✅ Tripulación actualizada a ${newCrewSize} personas`, 'success');
+    return { success: true, data: data };
+    } else {
+    const errorMsg = data.error || data.message || 'Error al actualizar tripulación';
+    showNotification(errorMsg, 'error');
+    return { success: false, error: errorMsg };
+    }
+} catch (error) {
+    console.error('❌ Error configurando tripulación:', error);
+    showNotification('Error de conexión con el servidor', 'error');
+    return { success: false, error: error.message };
+}
+}
+
+async function configureInitialPortions(newInitialPortions) {
+try {
+    console.log("Enviando solicitud para configurar suministros:", newInitialPortions);
+    
+    const response = await fetch('/api/alimentos/configurar-suministros/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+        porciones_iniciales: parseInt(newInitialPortions)
+    })
+    });
+    
+    const data = await response.json();
+    console.log("Respuesta de configurar suministros:", data);
+    
+    if (response.ok && data.success) {
+    await obtenerEstadoAlimentos();
+    showNotification(`✅ Suministros actualizados a ${newInitialPortions} porciones iniciales`, 'success');
+    return { success: true, data: data };
+    } else {
+    const errorMsg = data.error || data.message || 'Error al actualizar suministros';
+    showNotification(errorMsg, 'error');
+    return { success: false, error: errorMsg };
+    }
+} catch (error) {
+    console.error('❌ Error configurando suministros:', error);
+    showNotification('Error de conexión con el servidor', 'error');
+    return { success: false, error: error.message };
+}
+}
+
+async function clearConsumptionRecords() {
+try {
+    console.log("Enviando solicitud para borrar registros");
+    
+    const response = await fetch('/api/alimentos/borrar-registros/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+    }
+    });
+    
+    const data = await response.json();
+    console.log("Respuesta de borrar registros:", data);
+    
+    if (response.ok && data.success) {
+    showNotification('✅ Todos los registros de consumo han sido eliminados', 'success');
+    return { success: true, data: data };
+    } else {
+    const errorMsg = data.error || data.message || 'Error al borrar registros';
+    showNotification(errorMsg, 'error');
+    return { success: false, error: errorMsg };
+    }
+} catch (error) {
+    console.error('❌ Error borrando registros:', error);
+    showNotification('Error de conexión con el servidor', 'error');
+    return { success: false, error: error.message };
+}
+}
+
+async function resetCompleteSystem() {
+try {
+    console.log("Enviando solicitud para reiniciar sistema");
+    
+    const response = await fetch('/api/alimentos/reiniciar-completo/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+        tripulantes: CONFIG.defaultCrewSize,
+        porciones_iniciales: CONFIG.defaultInitialPortions
+    })
+    });
+    
+    const data = await response.json();
+    console.log("Respuesta de reiniciar sistema:", data);
+    
+    if (response.ok && data.success) {
+    document.getElementById('configure-crew-size').value = CONFIG.defaultCrewSize;
+    document.getElementById('configure-initial-portions').value = CONFIG.defaultInitialPortions;
+    
+    if (data.recurso_alimentos) {
+        appState.initialPortions = data.recurso_alimentos.porciones_iniciales;
+        appState.remainingPortions = data.recurso_alimentos.porciones_actuales;
+        appState.porcentajeRestante = data.recurso_alimentos.porcentaje_restante;
+        appState.autonomyDays = data.recurso_alimentos.dias_autonomia;
+    }
+    
+    showNotification('✅ Sistema reiniciado completamente. Valores restaurados por defecto.', 'success');
+    return { success: true, data: data };
+    } else {
+    const errorMsg = data.error || data.message || 'Error al reiniciar sistema';
+    showNotification(errorMsg, 'error');
+    return { success: false, error: errorMsg };
+    }
+} catch (error) {
+    console.error('❌ Error reiniciando sistema:', error);
+    showNotification('Error de conexión con el servidor', 'error');
+    return { success: false, error: error.message };
+}
+}
+
+// ============================================
+// EJECUTAR ACCIONES CONFIRMADAS (REVISADO)
+// ============================================
+
+async function executeConfirmedAction() {
+console.log('executeConfirmedAction llamado');
+console.log('pendingActionType actual:', pendingActionType);
+console.log('pendingActionData actual:', pendingActionData);
+
+if (!pendingActionType) {
+    console.warn("No hay acción pendiente para ejecutar");
+    showNotification('No se encontró acción pendiente', 'error');
+    hideConfirmationModal();
+    return;
+}
+
+console.log("Ejecutando acción:", pendingActionType, "con datos:", pendingActionData);
+
+// Guardar en variables locales antes de limpiar
+const actionType = pendingActionType;
+const actionData = pendingActionData;
+
+// Limpiar inmediatamente después de guardar
+pendingActionType = null;
+pendingActionData = null;
+
+// Ocultar modal
+hideConfirmationModal();
+
+try {
+    let result;
+    switch(actionType) {
+    case 'configure-crew':
+        result = await configureCrewSize(actionData);
+        break;
+    case 'configure-portions':
+        result = await configureInitialPortions(actionData);
+        break;
+    case 'clear-records':
+        result = await clearConsumptionRecords();
+        break;
+    case 'reset-all':
+        result = await resetCompleteSystem();
+        break;
+    default:
+        console.warn('Tipo de acción desconocido:', actionType);
+        showNotification('Tipo de acción no reconocido: ' + actionType, 'error');
+        return;
+    }
+    
+    if (result && !result.success) {
+    console.error('Error en la acción:', result.error);
+    }
+    
+} catch (error) {
+    console.error('Error ejecutando acción:', error);
+    showNotification('Error al ejecutar la acción: ' + error.message, 'error');
+}
+}
+
+// ============================================
+// CARGAR DATOS INICIALES
+// ============================================
+
+async function loadInitialData() {
+try {
+    const result = await obtenerEstadoAlimentos();
+    
+    if (result.success) {
+    const data = result.data;
+    
+    if (data.num_tripulantes) {
+        document.getElementById('configure-crew-size').value = data.num_tripulantes;
+    }
+    
+    if (data.porciones_iniciales) {
+        document.getElementById('configure-initial-portions').value = data.porciones_iniciales;
+    }
+    
+    console.log("✅ Datos iniciales cargados correctamente");
+    }
+} catch (error) {
+    console.error('Error cargando datos iniciales:', error);
+}
+}
+
+// ============================================
+// MANEJO DE EVENTOS (REVISADO)
+// ============================================
+
+// Configurar tripulación
+document.getElementById("btn-configure-crew").addEventListener("click", function() {
+const newCrewSize = parseInt(document.getElementById("configure-crew-size").value) || 0;
+
+if (newCrewSize < 1 || newCrewSize > 6) {
+    showNotification("⚠️ El número de tripulantes debe estar entre 1 y 6", "warning");
+    return;
+}
+
+showConfirmationModal(
+    "Configurar Tripulación",
+    `¿Está seguro de que desea cambiar el número de tripulantes a ${newCrewSize}? El consumo esperado se recalculará automáticamente.`,
+    'configure-crew',
+    newCrewSize
+);
+});
+
+// Configurar suministros
+document.getElementById("btn-configure-portions").addEventListener("click", function() {
+const newInitialPortions = parseInt(document.getElementById("configure-initial-portions").value) || 0;
+
+if (newInitialPortions <= 0) {
+    showNotification("⚠️ Las porciones iniciales deben ser mayores a 0", "warning");
+    return;
+}
+
+showConfirmationModal(
+    "Configurar Suministros",
+    `¿Está seguro de que desea cambiar las porciones iniciales a ${newInitialPortions}? Esta acción afectará todos los cálculos de autonomía.`,
+    'configure-portions',
+    newInitialPortions
+);
+});
+
+// Borrar registros
+document.getElementById("btn-clear-records").addEventListener("click", function() {
+showConfirmationModal(
+    "Borrar Registros de Consumo",
+    "¿Está seguro de que desea eliminar TODOS los registros de consumo? Esta acción no se puede deshacer. Los suministros se mantendrán igual.",
+    'clear-records'
+);
+});
+
+// Reiniciar completamente
+document.getElementById("btn-reset-all").addEventListener("click", function() {
+showConfirmationModal(
+    "Reiniciar Sistema Completo",
+    "¿Está seguro de que desea reiniciar COMPLETAMENTE el sistema? Esto eliminará todos los registros, restaurará los valores por defecto y reiniciará la misión. Esta acción no se puede deshacer.",
+    'reset-all'
+);
+});
+
+// Manejo del modal de confirmación
+document.getElementById("modal-cancel").addEventListener("click", function() {
+console.log('Modal cancelado');
+pendingActionType = null;
+pendingActionData = null;
+hideConfirmationModal();
+});
+
+document.getElementById("modal-confirm").addEventListener("click", function() {
+console.log('Modal confirmado, ejecutando acción...');
+executeConfirmedAction();
+});
+
+// Cerrar modal haciendo clic fuera de él
+document.getElementById("confirmation-modal").addEventListener("click", function(event) {
+if (event.target.id === "confirmation-modal") {
+    console.log('Clic fuera del modal, cancelando...');
+    pendingActionType = null;
+    pendingActionData = null;
+    hideConfirmationModal();
+}
+});
+
+// Evitar que el clic dentro del modal lo cierre
+const modalContent = document.getElementById("modal-content");
+if (modalContent) {
+modalContent.addEventListener("click", function(event) {
+    event.stopPropagation();
+});
+}
+
+// ============================================
+// INICIALIZACIÓN
+// ============================================
+
+async function initializeApp() {
+console.log("🚀 Inicializando panel de control de alimentos...");
+
+try {
+    await loadInitialData();
+    console.log("✅ Panel de control inicializado correctamente");
+    
+    // Agregar logs para depuración
+    console.log("=== DEPURACIÓN ===");
+    console.log("Elementos encontrados:");
+    console.log("- btn-configure-crew:", document.getElementById("btn-configure-crew"));
+    console.log("- btn-configure-portions:", document.getElementById("btn-configure-portions"));
+    console.log("- btn-clear-records:", document.getElementById("btn-clear-records"));
+    console.log("- btn-reset-all:", document.getElementById("btn-reset-all"));
+    console.log("- confirmation-modal:", document.getElementById("confirmation-modal"));
+    console.log("==================");
+    
+} catch (error) {
+    console.error("❌ Error inicializando panel de control:", error);
+    showNotification("Error al inicializar el panel de control", "error");
+}
+}
+
+initializeApp();
+});
+</script>
+
+<!-- Estilos para las notificaciones -->
+<style>
+.notification {
+position: fixed;
+top: 20px;
+right: 20px;
+padding: 15px 20px;
+border-radius: 8px;
+background-color: #10b981;
+color: white;
+font-weight: 600;
+z-index: 9999;
+box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+from {
+transform: translateX(100%);
+opacity: 0;
+}
+to {
+transform: translateX(0);
+opacity: 1;
+}
+}
+
+.btn-primary {
+background: #3b82f6;
+color: white;
+border: none;
+padding: 12px 24px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+transition: background 0.3s;
+}
+
+.btn-primary:hover {
+background: #2563eb;
+}
+
+.form-group {
+margin-bottom: 15px;
+}
+
+.form-label {
+display: block;
+margin-bottom: 5px;
+color: #ffa8a8;
+font-size: 14px;
+font-weight: 600;
+}
+
+.form-input, .form-select {
+width: 100%;
+padding: 10px;
+background: #1f2937;
+border: 1px solid #4b5563;
+border-radius: 6px;
+color: #fff;
+font-size: 16px;
+}
+
+.form-input:focus, .form-select:focus {
+outline: none;
+border-color: #3b82f6;
+box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+</style>
+
+{% endblock %}

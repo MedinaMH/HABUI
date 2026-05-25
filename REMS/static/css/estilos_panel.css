@@ -1,0 +1,116 @@
+/* Paleta de colores y fuentes */
+:root {
+    --azul-primario: #145ca3;
+    --blanco: #ffffff;
+    --gris-fondo: #f0f2f5;
+    --gris-oscuro: #2c3e50;
+    --gris-hover: #34495e;
+    --sombra: rgba(0, 0, 0, 0.15);
+    --fuente: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Encabezado */
+.encabezado {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 85px;
+    background-color: var(--azul-primario);
+    color: var(--blanco);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--fuente);
+    box-shadow: 0 2px 8px var(--sombra);
+    z-index: 1000;
+}
+
+.encabezado h1 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Contenedor interno del header */
+.header-top {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+/* Selector de idioma */
+.language-switcher {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+}
+
+.language-switcher select {
+    padding: 4px 6px;
+    font-size: 20px;
+}
+
+/* Contenido principal */
+.contenido {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 30px;
+    padding: 120px 40px 40px;
+    background-color: var(--gris-fondo);
+    min-height: 100vh;
+}
+
+/* Secciones individuales */
+.seccion {
+    background-color: var(--gris-oscuro);
+    color: var(--blanco);
+    width: 600px;
+    padding: 30px 20px;
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none; 
+    box-shadow: 0 4px 12px var(--sombra);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    font-family: var(--fuente);
+    cursor: pointer;
+    margin-top: 50px;
+}
+
+.seccion h2 {
+    color: inherit;
+    margin-bottom: 30px;
+    margin-top: 50px;
+    font-size: 2.8rem;
+}
+
+.seccion:hover {
+    background-color: var(--gris-hover);
+    transform: scale(1.04);
+}
+
+/* Imagen GIF */
+.icon-gif {
+    width: 400%;
+    max-width: 400px;
+    height: auto;
+    margin-top: 50px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--sombra);
+}

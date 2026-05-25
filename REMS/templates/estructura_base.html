@@ -1,0 +1,567 @@
+{% load i18n %}
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block titulo %}REMS{% endblock %}</title>
+
+    <!-- Bootstrap local -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+
+    <!-- Bootstrap Icons local -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="{% static 'css/estilos_panel_rems.css' %}">
+    
+  </head>
+
+  <body>
+    <!-- Header superior -->
+    <header class="navbar navbar-dark fixed-top d-flex justify-content-between align-items-center px-3"
+        style="height: 85px; background:#2a3c4e;">
+
+      <a href="{% url 'panel_principal' %}" class="btn btn-outline-light d-flex align-items-center gap-2">
+        <i class="bi bi-arrow-left-circle-fill fs-5"></i>
+        <span class="d-none d-sm-inline">{% trans "Panel principal" %}</span>
+      </a>
+      <div class="text-center flex-grow-1">
+        <span class="encabezado">{% trans "Sistema de Monitoreo de Recursos REMS" %}</span>
+      </div>
+      <div style="width: 110px;"></div>
+
+      <button 
+        class="navbar-toggler d-md-none" 
+        type="button" 
+        data-bs-toggle="collapse" 
+        data-bs-target="#sidebarMenu" 
+        aria-controls="sidebarMenu" 
+        aria-expanded="false" 
+        aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </header>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+          <div class="position-sticky pt-3">
+            <ul class="nav flex-column">
+
+              <!-- Todos los recursos -->
+              <li class="nav-item">
+                  <a id="btn-todos" class="nav-link {% if request.path == '/todos_los_recursos' %}active{% endif %}" href="{% url 'all_resources' %}">
+                      <i class="bi bi-grid-1x2-fill me-2"></i>{% trans "Todos los recursos" %}
+                  </a>
+              </li>
+
+              <!-- Energía -->
+              <li class="nav-item">
+                  <a id="btn-energia" class="nav-link {% if request.path == '/energia_rems' %}active{% endif %}" href="{% url 'panel_energia_rems' %}">
+                      <i class="bi bi-lightning-charge-fill me-2"></i>{% trans "Energía" %}
+                  </a>
+              </li>
+
+              <!-- Agua -->
+              <li class="nav-item">
+                  <a id="btn-agua" class="nav-link {% if request.path == '/agua_rems' %}active{% endif %}" href="{% url 'panel_agua_rems' %}">
+                      <i class="bi bi-droplet-fill me-2"></i>{% trans "Agua" %}
+                  </a>
+              </li>
+
+              <!-- Calidad del aire (submenu) -->
+              <li class="nav-item">
+                  <a id="btn-aire" class="nav-link d-flex justify-content-between align-items-center" 
+                      data-bs-toggle="collapse" 
+                      href="#submenuAire" 
+                      role="button" 
+                      aria-expanded="false" 
+                      aria-controls="submenuAire">
+                      <span><i class="bi bi-cloudy-fill me-2"></i>{% trans "Calidad del aire" %}</span>
+                      <i class="bi bi-caret-down-fill small"></i>
+                  </a>
+                  <div class="collapse ps-4 {% if '/oxigeno_rems' in request.path or '/co2_rems' in request.path %}show{% endif %}" id="submenuAire">
+                      <ul class="nav flex-column">
+                          <li class="nav-item">
+                              <a id="btn-oxigeno" class="nav-link {% if request.path == '/oxigeno_rems' %}active{% endif %}" href="{% url 'panel_oxigeno_rems' %}">
+                                  <i class="bi bi-cloud-fog2-fill me-2"></i>{% trans "Oxígeno (O₂)" %}
+                              </a>
+                          </li>
+                          <li class="nav-item">
+                              <a id="btn-co2" class="nav-link {% if request.path == '/co2_rems' %}active{% endif %}" href="{% url 'panel_co2_rems' %}">
+                                  <i class="bi bi-cloud-haze2-fill me-2"></i>{% trans "Dióxido de carbono (CO₂)" %}
+                              </a>
+                          </li>
+                      </ul>
+                  </div>
+              </li>
+
+              <!-- Alimentos -->
+              <li class="nav-item">
+                  <a id="btn-alimentos" class="nav-link {% if request.path == '/alimentos_rems' %}active{% endif %}" href="{% url 'panel_alimentos_rems' %}">
+                      <i class="bi bi-cup-straw me-2"></i>{% trans "Alimentos" %}
+                  </a>
+              </li>
+
+            </ul>
+          </div>
+        </nav>
+
+        <!-- Contenido -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 mt-4">
+          {% block contenido %}
+          {% endblock %}
+        </main>
+      </div>
+    </div>
+
+    <footer class="text-center py-3 bg-light border-top mt-auto">
+      <small>&copy; 2026 MACII CREDES</small>
+    </footer>
+
+    <!-- Bootstrap JS local (incluye Popper) -->
+    <script src="{% static 'js/bootstrap.bundle.js' %}"></script>
+    <script>
+    // Mapa de recursos con sus configuraciones específicas
+      const resourceConfig = {
+          'agua': {
+              buttonId: 'btn-agua',
+              wsUrl: 'ws/agua/',
+              dataField: 'nivel',
+              ranges: {
+                  warning: { min: 16, max: 40 },    // Amarillo: 16-40%
+                  critical: { min: 0, max: 15 }      // Rojo: 0-15%
+              },
+              isPercentage: true
+          },
+          'energia': {
+              buttonId: 'btn-energia',
+              wsUrl: 'ws/energia/',
+              dataField: 'battery',
+              ranges: {
+                  warning: { min: 0.16, max: 0.30 }, // Amarillo: 0.16-0.30
+                  critical: { min: 0.0, max: 0.15 }   // Rojo: 0.0-0.15
+              },
+              isPercentage: false
+          },
+          'oxigeno': {
+              buttonId: 'btn-oxigeno',
+              wsUrl: 'ws/oxigeno/',
+              dataField: 'nivel',
+              ranges: {
+                  warning: [                            // Amarillo: múltiples rangos
+                      { min: 17, max: 19.4 },
+                      { min: 23.6, max: 25 }
+                  ],
+                  critical: [                           // Rojo: múltiples rangos
+                      { min: 0, max: 16.99,}, // < 17%
+                      { min: 25.001, max: 100} // > 25%
+                  ]
+              },
+              isPercentage: true,
+              hasMultipleRanges: true
+          },
+          'co2': {
+              buttonId: 'btn-co2',
+              wsUrl: 'ws/co2/',
+              dataField: 'valor',
+              ranges: {
+                  warning: { min: 1001, max: 2000 },   // Amarillo: 1001-2000 ppm
+                  critical: { min: 2001, max: 10000 }  // Rojo: >2000 ppm (a partir de 2001)
+              },
+              isPercentage: false
+          },
+          'temperatura': {
+              buttonId: 'btn-temperatura',
+              wsUrl: 'ws/temperatura/',
+              dataField: 'valor',
+              ranges: {
+                  warning: [                            // Amarillo: múltiples rangos
+                      { min: 18, max: 20 },
+                      { min: 24, max: 26 }
+                  ],
+                  critical: [                           // Rojo: múltiples rangos
+                      { min: 0, max: 17.999 },         // < 18°C
+                      { min: 26.001, max: 100 }        // > 26°C
+                  ]
+              },
+              isPercentage: false,
+              hasMultipleRanges: true,
+              unit: '°C'
+          },
+          'humedad': {
+              buttonId: 'btn-humedad',
+              wsUrl: 'ws/humedad/',
+              dataField: 'valor',
+              ranges: {
+                  warning: [                            // Amarillo: múltiples rangos
+                      { min: 30, max: 40 },
+                      { min: 60, max: 70 }
+                  ],
+                  critical: [                           // Rojo: múltiples rangos
+                      { min: 0, max: 29.999 },         // < 30%
+                      { min: 70.001, max: 100 }        // > 70%
+                  ]
+              },
+              isPercentage: true,
+              hasMultipleRanges: true
+          }
+      };
+
+      // Mapeo de hijos a padres
+      const parentChildMap = {
+          'btn-aire': ['btn-oxigeno', 'btn-co2'],
+          'btn-ambiente': ['btn-temperatura', 'btn-humedad']
+      };
+
+      // Estado actual de alertas por recurso
+      const alertStates = {};
+      
+      // Estado de alertas por botón (incluye padres)
+      const buttonAlertStates = {};
+
+      // Objeto para almacenar las conexiones WebSocket
+      const wsConnections = {};
+      
+      // Historial de valores recientes
+      const valueHistory = {};
+
+      // Función para determinar el nivel de alerta
+      function determineAlertLevel(resourceName, value) {
+          const config = resourceConfig[resourceName];
+          if (!config || value === null || value === undefined || isNaN(value)) {
+              return 'normal';
+          }
+          
+          // Guardar en historial
+          if (!valueHistory[resourceName]) {
+              valueHistory[resourceName] = [];
+          }
+          valueHistory[resourceName].push({
+              timestamp: new Date().toISOString(),
+              value: value,
+              field: config.dataField
+          });
+          if (valueHistory[resourceName].length > 10) {
+              valueHistory[resourceName].shift();
+          }
+          
+          // Para DEBUG: ver qué valor estamos recibiendo
+          console.log(`[DEBUG] ${resourceName}: valor = ${value}, tipo = ${typeof value}`);
+          
+          // Para recursos con múltiples rangos (oxígeno, temperatura, humedad)
+          if (config.hasMultipleRanges) {
+              // Primero verificar rangos críticos
+              for (const range of config.ranges.critical) {
+                  if (isValueInRange(value, range)) {
+                      console.log(`[DEBUG] ${resourceName}: ${value} en rango crítico`, range);
+                      return 'critical';
+                  }
+              }
+              // Luego verificar rangos de warning
+              for (const range of config.ranges.warning) {
+                  if (isValueInRange(value, range)) {
+                      console.log(`[DEBUG] ${resourceName}: ${value} en rango warning`, range);
+                      return 'warning';
+                  }
+              }
+          } else {
+              // Para recursos con rangos simples (agua, energía, CO2)
+              // DEBUG específico para CO2
+              if (resourceName === 'co2') {
+                  console.log(`[DEBUG CO2] Valor: ${value}, Warning range: ${config.ranges.warning.min}-${config.ranges.warning.max}, Critical range: ${config.ranges.critical.min}-${config.ranges.critical.max}`);
+              }
+              
+              // Primero verificar rango crítico
+              if (isValueInRange(value, config.ranges.critical)) {
+                  console.log(`[DEBUG] ${resourceName}: ${value} en rango crítico simple`);
+                  return 'critical';
+              }
+              // Luego verificar rango warning
+              if (isValueInRange(value, config.ranges.warning)) {
+                  console.log(`[DEBUG] ${resourceName}: ${value} en rango warning simple`);
+                  return 'warning';
+              }
+          }
+          
+          console.log(`[DEBUG] ${resourceName}: ${value} en rango normal`);
+          return 'normal';
+      }
+      
+      // Función auxiliar para verificar si un valor está en un rango
+      function isValueInRange(value, range) {
+          // Si el rango tiene exclusiveMin (para < o >)
+          if (range.exclusiveMin) {
+              // Cuando ambos min y max están definidos, significa valor < min O valor > max
+              if (range.min !== undefined && range.max !== undefined) {
+                  return value < range.min || value > range.max;
+              } 
+              // Solo min definido: valor < min
+              else if (range.min !== undefined) {
+                  return value < range.min;
+              } 
+              // Solo max definido: valor > max
+              else if (range.max !== undefined) {
+                  return value > range.max;
+              }
+              return false;
+          }
+          
+          // Rango normal [min, max]
+          const minCheck = range.min === undefined || value >= range.min;
+          const maxCheck = range.max === undefined || value <= range.max;
+          
+          // DEBUG
+          if (range.min !== undefined && range.max !== undefined) {
+              console.log(`[RANGE CHECK] ${value} >= ${range.min} = ${value >= range.min}, ${value} <= ${range.max} = ${value <= range.max}`);
+          }
+          
+          return minCheck && maxCheck;
+      }
+
+      // Función para conectar a un WebSocket
+      function connectWebSocket(resourceName, config) {
+          if (!config.wsUrl) return;
+          
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl = `${protocol}//${window.location.host}/${config.wsUrl}`;
+          
+          const ws = new WebSocket(wsUrl);
+          
+          ws.onopen = function() {
+              console.log(`WebSocket conectado para ${resourceName}`);
+          };
+          
+          ws.onmessage = function(event) {
+              try {
+                  const data = JSON.parse(event.data);
+                  handleResourceData(resourceName, data);
+              } catch (e) {
+                  console.error(`Error parsing WebSocket data para ${resourceName}:`, e, event.data);
+              }
+          };
+          
+          ws.onerror = function(error) {
+              console.error(`WebSocket error para ${resourceName}:`, error);
+          };
+          
+          ws.onclose = function() {
+              console.log(`WebSocket cerrado para ${resourceName}. Reconectando en 5 segundos...`);
+              setTimeout(() => connectWebSocket(resourceName, config), 5000);
+          };
+          
+          wsConnections[resourceName] = ws;
+      }
+
+      // Función para procesar datos del recurso
+      function handleResourceData(resourceName, data) {
+          const config = resourceConfig[resourceName];
+          if (!config) return;
+          
+          const button = document.getElementById(config.buttonId);
+          if (!button) return;
+          
+          // Extraer el valor según el campo específico del recurso
+          let value = data[config.dataField];
+          
+          // Si el valor viene como string, convertirlo a número
+          if (typeof value === 'string') {
+              value = parseFloat(value);
+          }
+          
+          // Validar que sea un número válido
+          if (isNaN(value)) {
+              console.warn(`Valor inválido para ${resourceName}:`, data[config.dataField]);
+              return;
+          }
+          
+          // Determinar nivel de alerta
+          const alertLevel = determineAlertLevel(resourceName, value);
+          
+          // Actualizar el estado visual del botón hijo
+          updateAlertState(resourceName, config.buttonId, alertLevel, value);
+          
+          // Actualizar estado del botón padre si corresponde
+          updateParentAlertState(resourceName, alertLevel);
+      }
+
+      // Función para actualizar el estado visual de la alerta de un botón
+      function updateAlertState(resourceName, buttonId, alertLevel, value) {
+          const button = document.getElementById(buttonId);
+          if (!button) return;
+          
+          // Remover clases anteriores
+          button.classList.remove('warning-alert', 'critical-alert');
+          
+          // Guardar el estado actual
+          const previousState = buttonAlertStates[buttonId];
+          buttonAlertStates[buttonId] = alertLevel;
+          
+          // Aplicar nueva clase si es necesario
+          const config = resourceConfig[resourceName];
+          if (alertLevel === 'warning') {
+              button.classList.add('warning-alert');
+              // Añadir tooltip con el valor actual
+              const unit = config?.isPercentage ? '%' : config?.unit || '';
+              button.title = `ADVERTENCIA: ${value.toFixed(2)}${unit}`;
+          } else if (alertLevel === 'critical') {
+              button.classList.add('critical-alert');
+              // Añadir tooltip con el valor actual
+              const unit = config?.isPercentage ? '%' : config?.unit || '';
+              button.title = `CRÍTICO: ${value.toFixed(2)}${unit}`;
+          } else {
+              // Estado normal - quitar tooltip si no hay otra alerta
+              if (!button.title.includes('Hijo:')) {
+                  button.removeAttribute('title');
+              }
+          }
+          
+          // Log solo si cambió el estado
+          if (previousState !== alertLevel && config) {
+              const unit = config.isPercentage ? '%' : config.unit || '';
+              console.log(`[${resourceName}] ${value}${unit} → ${alertLevel}`);
+          }
+      }
+
+      // Función para actualizar el estado del botón padre basado en los hijos
+      function updateParentAlertState(childResourceName, childAlertLevel) {
+          const config = resourceConfig[childResourceName];
+          if (!config) return;
+          
+          const childButtonId = config.buttonId;
+          
+          // Encontrar el botón padre correspondiente
+          let parentButtonId = null;
+          
+          if (childResourceName === 'oxigeno' || childResourceName === 'co2') {
+              parentButtonId = 'btn-aire';
+          } else if (childResourceName === 'temperatura' || childResourceName === 'humedad') {
+              parentButtonId = 'btn-ambiente';
+          }
+          
+          if (!parentButtonId) return;
+          
+          console.log(`[DEBUG PADRE] ${childResourceName} (${childButtonId}) → ${parentButtonId}, alerta hijo: ${childAlertLevel}`);
+          
+          // Obtener todos los hijos del padre
+          const childrenIds = parentChildMap[parentButtonId] || [];
+          
+          // Determinar el nivel de alerta más alto entre los hijos
+          let highestAlertLevel = 'normal';
+          
+          for (const childId of childrenIds) {
+              const childAlert = buttonAlertStates[childId];
+              console.log(`[DEBUG PADRE] Hijo ${childId} estado: ${childAlert}`);
+              
+              if (childAlert === 'critical') {
+                  highestAlertLevel = 'critical';
+                  break;
+              } else if (childAlert === 'warning' && highestAlertLevel !== 'critical') {
+                  highestAlertLevel = 'warning';
+              }
+          }
+          
+          console.log(`[DEBUG PADRE] ${parentButtonId} nivel más alto: ${highestAlertLevel}`);
+          
+          // Actualizar el botón padre
+          updateParentButtonAlert(parentButtonId, highestAlertLevel);
+      }
+
+      // Función específica para actualizar botones padres
+      function updateParentButtonAlert(parentButtonId, alertLevel) {
+          const parentButton = document.getElementById(parentButtonId);
+          if (!parentButton) return;
+          
+          // Remover clases anteriores
+          parentButton.classList.remove('warning-alert', 'critical-alert');
+          
+          // Guardar estado anterior
+          const previousState = buttonAlertStates[parentButtonId];
+          
+          // Aplicar nueva clase si es necesario
+          if (alertLevel === 'warning') {
+              parentButton.classList.add('warning-alert');
+              // Añadir tooltip informativo
+              if (!parentButton.title.includes('Hijo:')) {
+                  parentButton.title = 'Uno o más recursos en ADVERTENCIA';
+              }
+          } else if (alertLevel === 'critical') {
+              parentButton.classList.add('critical-alert');
+              // Añadir tooltip informativo
+              if (!parentButton.title.includes('Hijo:')) {
+                  parentButton.title = 'Uno o más recursos en estado CRÍTICO';
+              }
+          } else {
+              // Estado normal - quitar tooltip
+              parentButton.removeAttribute('title');
+          }
+          
+          // Guardar nuevo estado
+          buttonAlertStates[parentButtonId] = alertLevel;
+          
+          // Log si cambió el estado
+          if (previousState !== alertLevel) {
+              console.log(`[${parentButtonId}] Estado padre actualizado: ${alertLevel}`);
+          }
+      }
+
+      // Función para inicializar todas las conexiones WebSocket
+      function initializeWebSockets() {
+          for (const [resourceName, config] of Object.entries(resourceConfig)) {
+              if (config.wsUrl) {
+                  connectWebSocket(resourceName, config);
+              }
+          }
+      }
+
+      // Inicializar cuando el DOM esté listo
+      document.addEventListener('DOMContentLoaded', function() {
+          initializeWebSockets();
+      });
+
+      // Limpiar conexiones al cerrar la página
+      window.addEventListener('beforeunload', function() {
+          for (const ws of Object.values(wsConnections)) {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                  ws.close();
+              }
+          }
+      });
+      
+      // Exponer funciones para debugging
+      window.debugAlerts = {
+          getAlertStates: () => ({ buttonAlertStates, alertStates }),
+          getValueHistory: () => valueHistory,
+          getResourceConfig: () => resourceConfig,
+          simulateAlert: (resourceName, value) => {
+              const config = resourceConfig[resourceName];
+              if (config) {
+                  const alertLevel = determineAlertLevel(resourceName, value);
+                  updateAlertState(resourceName, config.buttonId, alertLevel, value);
+                  updateParentAlertState(resourceName, alertLevel);
+                  console.log(`[DEBUG] ${resourceName} = ${value} → ${alertLevel}`);
+              }
+          },
+          testAllRanges: () => {
+              // Testear todos los rangos
+              const testValues = {
+                  'oxigeno': [16, 17.5, 19, 21, 24, 25.5, 26],
+                  'co2': [800, 1000, 1500, 2000, 2001, 2500],
+                  'temperatura': [16, 17, 19, 22, 25, 26.5, 27],
+                  'humedad': [25, 29, 35, 50, 65, 70.5, 75]
+              };
+              
+              for (const [resource, values] of Object.entries(testValues)) {
+                  values.forEach(value => {
+                      const alertLevel = determineAlertLevel(resource, value);
+                      console.log(`${resource} ${value} → ${alertLevel}`);
+                  });
+              }
+          }
+      };
+    </script>
+  </body>
+</html>
