@@ -1,0 +1,342 @@
+/* registro.css - Estilos específicos para el formulario de registro de dos pasos */
+
+:root {
+    --step-active: #145ca3;
+    --step-completed: #28a745;
+    --step-inactive: #e9ecef;
+    --registration-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+body {
+    background: var(--registration-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.registration-container {
+    max-width: 900px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease;
+}
+
+.registration-card {
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    background: var(--form-bg);
+    border: 1px solid var(--form-border);
+}
+
+.registration-header {
+    background: linear-gradient(135deg, var(--form-primary) 0%, #0d4a8a 100%);
+    color: white;
+    padding: 30px 40px;
+    text-align: center;
+    border-bottom: 4px solid rgba(255, 255, 255, 0.1);
+}
+
+.registration-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+.registration-header .subtitle {
+    opacity: 0.9;
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+.registration-body {
+    padding: 40px;
+}
+
+/* Indicador de pasos */
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    position: relative;
+    counter-reset: step;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--step-inactive);
+    z-index: 1;
+}
+
+.step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.step-number {
+    width: 48px;
+    height: 48px;
+    background: var(--step-inactive);
+    color: #6c757d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-weight: 600;
+    border: 4px solid var(--form-bg);
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+    background: var(--step-active);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(20, 92, 163, 0.3);
+}
+
+.step.completed .step-number {
+    background: var(--step-completed);
+    color: white;
+}
+
+.step.completed .step-number::after {
+    content: '✓';
+    font-size: 1.2rem;
+}
+
+.step-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.step.active .step-label {
+    color: var(--step-active);
+    font-weight: 600;
+}
+
+.step.completed .step-label {
+    color: var(--step-completed);
+}
+
+/* Contenido de pasos */
+.step-content {
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+}
+
+.step-content.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+/* Mejoras específicas para formularios en registro */
+.registration-body .form-container {
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    margin-bottom: 0;
+}
+
+.registration-body .form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.registration-body .form-section-title i {
+    font-size: 1.3rem;
+    color: var(--form-primary);
+}
+
+.registration-body .form-control-lg {
+    padding: 14px 16px;
+    font-size: 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.registration-body .form-control-lg:focus {
+    background-color: white;
+    border-color: var(--form-primary);
+    box-shadow: 0 0 0 3px rgba(20, 92, 163, 0.1);
+    transform: translateY(-1px);
+}
+
+.registration-body .form-select-lg {
+    padding: 14px 16px;
+    font-size: 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+/* Grupo de botones */
+.form-button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 1px solid #e9ecef;
+    align-items: center;
+}
+
+.form-button-group .btn {
+    padding: 12px 30px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.registration-body .btn-primary {
+    background: linear-gradient(135deg, var(--form-primary) 0%, #0d4a8a 100%);
+    border: none;
+}
+
+.registration-body .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(20, 92, 163, 0.3);
+}
+
+.registration-body .btn-outline-secondary {
+    border: 2px solid #dee2e6;
+    color: #495057;
+}
+
+.registration-body .btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    transform: translateY(-1px);
+}
+
+.spacer {
+    flex: 1;
+}
+
+/* PIN display */
+.pin-display-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    padding: 15px;
+    border: 2px dashed #ced4da;
+    text-align: center;
+}
+
+.pin-display-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.pin-display-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--form-primary);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 5px;
+    transition: all 0.3s ease;
+}
+
+/* Mensajes específicos para registro */
+.registration-messages {
+    margin-bottom: 30px;
+}
+
+.registration-body .alert {
+    border-radius: 8px;
+    border: none;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive para registro */
+@media (max-width: 768px) {
+    .registration-body {
+        padding: 25px;
+    }
+    
+    .registration-header {
+        padding: 25px 20px;
+    }
+    
+    .registration-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .form-button-group {
+        flex-direction: column;
+    }
+    
+    .form-button-group .btn {
+        width: 100%;
+    }
+    
+    .spacer {
+        display: none;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .step-label {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    body {
+        padding: 10px;
+    }
+    
+    .registration-body {
+        padding: 20px 15px;
+    }
+    
+    .registration-body .form-section-title {
+        font-size: 1.1rem;
+    }
+    
+    .step-indicator {
+        margin-bottom: 30px;
+    }
+    
+    .step-indicator::before {
+        top: 20px;
+    }
+}

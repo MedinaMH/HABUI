@@ -1,0 +1,667 @@
+/* ========================================
+   formularios.css - Estilos para formularios de PWMS
+   ======================================== */
+
+/* Variables para formularios */
+:root {
+    --form-bg: #ffffff;
+    --form-border: #dee2e6;
+    --form-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --form-radius: 10px;
+    --form-primary: #145ca3;
+    --form-primary-light: rgba(20, 92, 163, 0.1);
+    --form-primary-hover: #0d4a8a;
+    --form-success: #28a745;
+    --form-danger: #dc3545;
+    --form-warning: #ffc107;
+    --form-info: #17a2b8;
+    --form-orange: #fd7e14;
+    --form-gray-light: #f8f9fa;
+    --form-gray: #6c757d;
+    --form-gray-dark: #495057;
+    --transition-speed: 0.3s;
+}
+
+/* ===== CONTENEDORES PRINCIPALES ===== */
+.form-container {
+    background: var(--form-bg);
+    border-radius: var(--form-radius);
+    border: 1px solid var(--form-border);
+    padding: 2rem;
+    box-shadow: var(--form-shadow);
+    margin-bottom: 2rem;
+    transition: box-shadow var(--transition-speed) ease;
+}
+
+.form-container:hover {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== TÍTULOS Y ENCABEZADOS ===== */
+.form-section-title {
+    color: var(--form-primary);
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-section-title i {
+    margin-right: 0.75rem;
+    font-size: 1.3rem;
+}
+
+.form-section-header {
+    background: linear-gradient(135deg, var(--form-primary) 0%, #1e3c72 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px 10px 0 0;
+    margin: -2rem -2rem 1.5rem -2rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section-header i {
+    font-size: 1.5rem;
+}
+
+/* ===== TARJETAS DE INSTRUCCIONES ===== */
+.instructions-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    border-left: 5px solid var(--form-primary);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.instructions-card h5 {
+    color: var(--form-gray-dark);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.instructions-card h5 i {
+    color: var(--form-primary);
+    font-size: 1.3rem;
+}
+
+/* ===== BADGES DE ESCALA ===== */
+.scale-badges-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid var(--form-border);
+}
+
+.scale-badges-title {
+    font-weight: 600;
+    color: var(--form-gray-dark);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.scale-badges {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.scale-badge {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    padding: 0.75rem 0.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    background-color: var(--form-gray-light);
+    border: 1px solid var(--form-border);
+    transition: all var(--transition-speed) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.scale-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.scale-badge-1 {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.scale-badge-2 {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.scale-badge-3 {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.scale-badge-4 {
+    background-color: #cce5ff;
+    border-color: #b8daff;
+    color: #004085;
+}
+
+/* ===== GRUPOS DE PREGUNTAS ===== */
+.question-group {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    transition: box-shadow var(--transition-speed) ease;
+}
+
+.question-group:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.question-group-title {
+    color: var(--form-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px dashed #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.question-group-title i {
+    font-size: 1.2rem;
+}
+
+.question-item {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.question-item:hover {
+    background-color: var(--form-primary-light);
+}
+
+.question-item label {
+    font-weight: 500;
+    color: var(--form-gray-dark);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* ===== CAMPOS DE FORMULARIO ===== */
+.form-control, .form-select {
+    border: 1px solid var(--form-border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--form-primary);
+    box-shadow: 0 0 0 0.2rem rgba(20, 92, 163, 0.25);
+    outline: none;
+}
+
+.form-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* ===== LABELS ===== */
+.form-label {
+    font-weight: 500;
+    color: var(--form-gray-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-label i {
+    margin-right: 0.5rem;
+    color: var(--form-primary);
+}
+
+.form-label-required::after {
+    content: '*';
+    color: var(--form-danger);
+    margin-left: 4px;
+    font-weight: bold;
+}
+
+/* ===== TEXTOS DE AYUDA ===== */
+.form-text {
+    color: var(--form-gray);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-text i {
+    margin-right: 0.25rem;
+    font-size: 0.8rem;
+}
+
+/* ===== BOTONES DE FORMULARIO ===== */
+.form-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid #e9ecef;
+    flex-wrap: wrap;
+}
+
+.form-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.form-button i {
+    font-size: 1.1rem;
+}
+
+.form-button-primary {
+    background-color: var(--form-primary);
+    border: 1px solid var(--form-primary);
+    color: white;
+}
+
+.form-button-primary:hover:not(:disabled) {
+    background-color: var(--form-primary-hover);
+    border-color: var(--form-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(20, 92, 163, 0.3);
+}
+
+.form-button-secondary {
+    background-color: var(--form-gray);
+    border: 1px solid var(--form-gray);
+    color: white;
+}
+
+.form-button-secondary:hover {
+    background-color: #5a6268;
+    border-color: #5a6268;
+}
+
+.form-button-outline {
+    background-color: transparent;
+    border: 2px solid var(--form-border);
+    color: var(--form-gray-dark);
+}
+
+.form-button-outline:hover {
+    background-color: var(--form-gray-light);
+    border-color: var(--form-gray);
+}
+
+.form-button-danger {
+    background-color: var(--form-danger);
+    border: 1px solid var(--form-danger);
+    color: white;
+}
+
+.form-button-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* ===== ALERTAS EN FORMULARIOS ===== */
+.form-alert {
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-alert i {
+    font-size: 1.3rem;
+}
+
+.form-alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.form-alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+.form-alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.form-alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+/* ===== PROGRESO/INDICADORES ===== */
+.progress-indicator {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    height: 8px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, var(--form-primary), var(--form-info));
+    border-radius: 10px;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* ===== TABLAS EN FORMULARIOS ===== */
+.form-table-container {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--form-border);
+}
+
+.form-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+.form-table th {
+    background: linear-gradient(180deg, var(--form-gray-light), #e9ecef);
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--form-border);
+    color: var(--form-gray-dark);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.form-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--form-border);
+    vertical-align: middle;
+}
+
+.form-table tbody tr:hover {
+    background-color: var(--form-primary-light);
+}
+
+/* ===== BADGES EN FORMULARIOS ===== */
+.form-badge {
+    padding: 0.35rem 0.65rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.badge-normal {
+    background-color: var(--form-success);
+    color: white;
+}
+
+.badge-minima {
+    background-color: var(--form-warning);
+    color: #212529;
+}
+
+.badge-marcada {
+    background-color: var(--form-orange);
+    color: white;
+}
+
+.badge-extrema {
+    background-color: var(--form-danger);
+    color: white;
+}
+
+/* ===== VALIDACIÓN ===== */
+.is-invalid {
+    border-color: var(--form-danger) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 16px;
+    padding-right: 2.5rem;
+}
+
+.is-valid {
+    border-color: var(--form-success) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 16px;
+    padding-right: 2.5rem;
+}
+
+.invalid-feedback {
+    color: var(--form-danger);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA ZUNG ANXIETY ===== */
+.bg-orange {
+    background-color: var(--form-orange) !important;
+}
+
+.border-left-orange {
+    border-left: 5px solid var(--form-orange) !important;
+}
+
+.border-left-success {
+    border-left: 5px solid var(--form-success) !important;
+}
+
+.border-left-info {
+    border-left: 5px solid var(--form-info) !important;
+}
+
+.border-left-warning {
+    border-left: 5px solid var(--form-warning) !important;
+}
+
+.border-left-danger {
+    border-left: 5px solid var(--form-danger) !important;
+}
+
+.border-left-primary {
+    border-left: 5px solid var(--form-primary) !important;
+}
+
+/* Tabla de resultados */
+.table td {
+    vertical-align: middle;
+}
+
+.table .badge {
+    font-size: 0.85rem;
+}
+
+/* Estadísticas en historial */
+.stat-card {
+    border-radius: 10px;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Filtros */
+.filters-section {
+    background-color: var(--form-gray-light);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Paginación */
+.page-link {
+    color: var(--form-primary);
+}
+
+.page-item.active .page-link {
+    background-color: var(--form-primary);
+    border-color: var(--form-primary);
+}
+
+/* Mensaje sin datos */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--form-gray);
+    margin-bottom: 1rem;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .scale-badge {
+        min-width: 100px;
+    }
+}
+
+@media (max-width: 992px) {
+    .form-container {
+        padding: 1.75rem;
+    }
+    
+    .form-section-header {
+        margin: -1.75rem -1.75rem 1.5rem -1.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1.5rem;
+    }
+    
+    .form-section-header {
+        margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    }
+    
+    .form-section-title {
+        font-size: 1.1rem;
+    }
+    
+    .form-control, .form-select {
+        padding: 0.625rem 0.875rem;
+    }
+    
+    .scale-badges {
+        flex-direction: column;
+    }
+    
+    .scale-badge {
+        width: 100%;
+    }
+    
+    .form-buttons-container {
+        flex-direction: column-reverse;
+    }
+    
+    .form-button {
+        width: 100%;
+    }
+    
+    .table-responsive {
+        border: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-container {
+        padding: 1rem;
+        margin: 0 -15px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .form-section-header {
+        margin: -1rem -1rem 1rem -1rem;
+        border-radius: 0;
+    }
+    
+    .question-item {
+        padding: 0.5rem 0;
+    }
+}
+
+/* ===== IMPRESIÓN ===== */
+@media print {
+    .form-container {
+        box-shadow: none;
+        border: 1px solid #000;
+        padding: 1rem;
+    }
+    
+    .form-button {
+        display: none;
+    }
+    
+    .form-select {
+        background-image: none;
+    }
+    
+    .btn-group {
+        display: none;
+    }
+}

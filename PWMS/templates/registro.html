@@ -1,0 +1,508 @@
+{% load static %}
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+<!DOCTYPE html>
+<html lang="{{ CURRENT_LANGUAGE }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% trans "Registro" %} - {% trans "Sistema PWMS" %}</title>
+    
+    <!-- Bootstrap local -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    
+    <!-- Estilos generales para formularios -->
+    <link rel="stylesheet" href="{% static 'css/formularios.css' %}">
+    
+    <style>
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+            background: var(--form-gray-light);
+            border-radius: 50px;
+            padding: 0.5rem;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            transition: all var(--transition-speed) ease;
+        }
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid var(--form-border);
+            color: var(--form-gray);
+            transition: all var(--transition-speed) ease;
+        }
+        .step-label {
+            font-weight: 500;
+            color: var(--form-gray);
+        }
+        .step.active .step-number {
+            background-color: var(--form-primary);
+            border-color: var(--form-primary);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(20, 92, 163, 0.2);
+        }
+        .step.active .step-label {
+            color: var(--form-primary);
+            font-weight: 600;
+        }
+        .step.completed .step-number {
+            background-color: var(--form-success);
+            border-color: var(--form-success);
+            color: white;
+        }
+        .step.completed .step-number::after {
+            content: "✓";
+            font-size: 1.2rem;
+        }
+        .step.completed .step-number span {
+            display: none;
+        }
+        .step.completed .step-label {
+            color: var(--form-success);
+        }
+        .pin-display-container {
+            background-color: var(--form-gray-light);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--form-border);
+        }
+        .pin-display-label {
+            font-size: 0.875rem;
+            color: var(--form-gray);
+            margin-bottom: 0.5rem;
+        }
+        .pin-display-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            letter-spacing: 0.5rem;
+            color: var(--form-primary);
+            background: white;
+            display: inline-block;
+            padding: 0.25rem 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            transition: transform 0.2s ease;
+        }
+        .step-content {
+            display: none;
+        }
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-buttons-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--form-border);
+        }
+        .spacer {
+            flex: 1;
+        }
+        .is-invalid {
+            border-color: var(--form-danger) !important;
+        }
+        .invalid-feedback {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container" style="max-width: 900px; margin: 2rem auto;">
+        <div class="form-section-header">
+            <i class="bi bi-person-plus-fill"></i>
+            {% trans "Registro Completo - Sistema de Monitoreo del Bienestar Psicológico PWMS" %}
+        </div>
+        
+        <div class="step-indicator">
+            <div class="step active" data-step="1">
+                <div class="step-number"><span>1</span></div>
+                <div class="step-label">{% trans "Cuenta" %}</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-number"><span>2</span></div>
+                <div class="step-label">{% trans "Perfil" %}</div>
+            </div>
+        </div>
+        
+        {% if messages %}
+        <div class="registration-messages">
+            {% for message in messages %}
+            <div class="form-alert form-alert-{% if message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% elif message.tags == 'danger' %}danger{% else %}info{% endif %} alert-dismissible fade show d-flex align-items-center">
+                <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% elif message.tags == 'danger' %}x-circle{% else %}info-circle{% endif %}-fill me-2"></i>
+                <div class="flex-grow-1">{{ message }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Cerrar' %}"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" id="registrationForm">
+            {% csrf_token %}
+            
+            <!-- Paso 1: Información de la cuenta -->
+            <div class="step-content active" id="step1">
+                <div class="form-section">
+                    <h3 class="form-section-title">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        {% trans "Información de la Cuenta" %}
+                    </h3>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-person-badge"></i>
+                                {% trans "Nombre de Usuario" %} *
+                            </label>
+                            <input type="text" name="username" class="form-control" placeholder="{% trans 'Ingrese su usuario' %}" required pattern=".{3,}" title="{% trans 'Mínimo 3 caracteres' %}">
+                            <div class="form-text">{% trans "Este será tu nombre para iniciar sesión (Compuesto por las 3 primeras letras de tu nombre, un guión bajo, tres primeras letras de tu primer apellido y primera letra del segundo nombre. Todo en minúsculas)" %}</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-envelope"></i>
+                                {% trans "Correo Electrónico" %}
+                            </label>
+                            <input type="email" name="email" class="form-control" placeholder="{% trans 'ejemplo@email.com' %}">
+                            <div class="form-text">{% trans "Opcional - Para recuperación de cuenta" %}</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-key-fill"></i>
+                                {% trans "Contraseña" %} *
+                            </label>
+                            <input type="password" name="password" class="form-control" 
+                                   placeholder="••••••••" required
+                                   pattern=".{8,}" title="{% trans 'Mínimo 8 caracteres' %}">
+                            <div class="form-text">{% trans "Mínimo 8 caracteres" %}</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-lock-fill"></i>
+                                {% trans "PIN de Seguridad" %} *
+                            </label>
+                            <input type="text" name="pin" id="pinInput" class="form-control" 
+                                   maxlength="4" placeholder="0000" pattern="\d{4}" required
+                                   title="{% trans '4 dígitos numéricos' %}">
+                            <div class="form-text">{% trans "4 dígitos numéricos para acceso rápido" %}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Paso 2: Información del perfil -->
+            <div class="step-content" id="step2">
+                <div class="form-section">
+                    <h3 class="form-section-title">
+                        <i class="bi bi-person-badge-fill"></i>
+                        {% trans "Información Personal" %}
+                    </h3>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-telephone-fill"></i>
+                                {% trans "Teléfono" %} *
+                            </label>
+                            <input type="tel" name="telefono" class="form-control" 
+                                   placeholder="{% trans 'Ej: 555-1234567' %}" required>
+                            <div class="form-text">{% trans "Para contacto y notificaciones" %}</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-calendar-heart"></i>
+                                {% trans "Fecha de Nacimiento" %} *
+                            </label>
+                            <input type="date" name="fecha_nacimiento" class="form-control" 
+                                   max="{% now 'Y-m-d' %}" required>
+                            <div class="form-text">{% trans "Selecciona tu fecha de nacimiento" %}</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-gender-ambiguous"></i>
+                                {% trans "Género" %} *
+                            </label>
+                            <select name="genero" class="form-select" required>
+                                <option value="">{% trans "Seleccionar..." %}</option>
+                                <option value="masculino">{% trans "Masculino" %}</option>
+                                <option value="femenino">{% trans "Femenino" %}</option>
+                                <option value="otro">{% trans "Otro" %}</option>
+                                <option value="prefiero_no_decirlo">{% trans "Prefiero no decirlo" %}</option>
+                            </select>
+                            <div class="form-text">{% trans "Información para personalización" %}</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-shield-check"></i>
+                                {% trans "Tu PIN de Seguridad" %}
+                            </label>
+                            <div class="pin-display-container">
+                                <div class="pin-display-label">{% trans "PIN Configurado:" %}</div>
+                                <div class="pin-display-value" id="pinDisplay">----</div>
+                                <small class="text-muted">{% trans "Este es el PIN que configuraste en el paso anterior" %}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botones de navegación -->
+            <div class="form-buttons-container">
+                <button type="button" id="prevBtn" class="form-button form-button-secondary" style="display: none;">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    {% trans "Anterior" %}
+                </button>
+                
+                <div class="spacer"></div>
+                
+                <button type="button" id="nextBtn" class="form-button form-button-primary">
+                    {% trans "Siguiente" %}
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+                
+                <button type="submit" id="submitBtn" class="form-button form-button-primary" style="display: none;">
+                    <i class="bi bi-check-circle me-2"></i>
+                    {% trans "Completar Registro" %}
+                </button>
+                
+                <a href="{% url 'PWMS:panel_login' %}" class="form-button form-button-outline">
+                    <i class="bi bi-x-circle me-2"></i>
+                    {% trans "Cancelar" %}
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <script src="{% static 'js/bootstrap.bundle.js' %}"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentStep = 1;
+            const totalSteps = 2;
+            
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const pinInput = document.getElementById('pinInput');
+            const pinDisplay = document.getElementById('pinDisplay');
+            const steps = document.querySelectorAll('.step');
+            
+            function updatePinDisplay() {
+                const pinValue = pinInput.value || '----';
+                pinDisplay.textContent = pinValue.padEnd(4, '-').substring(0, 4);
+                
+                if (pinInput.value.length === 4) {
+                    pinDisplay.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        pinDisplay.style.transform = 'scale(1)';
+                    }, 300);
+                }
+            }
+            
+            updatePinDisplay();
+            pinInput.addEventListener('input', updatePinDisplay);
+            
+            function showStep(step) {
+                document.querySelectorAll('.step-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                document.getElementById(`step${step}`).classList.add('active');
+                
+                steps.forEach((stepEl, index) => {
+                    if (index + 1 < step) {
+                        stepEl.classList.remove('active');
+                        stepEl.classList.add('completed');
+                    } else if (index + 1 === step) {
+                        stepEl.classList.add('active');
+                        stepEl.classList.remove('completed');
+                    } else {
+                        stepEl.classList.remove('active', 'completed');
+                    }
+                });
+                
+                if (step === 1) {
+                    prevBtn.style.display = 'none';
+                    nextBtn.style.display = 'block';
+                    submitBtn.style.display = 'none';
+                } else if (step === totalSteps) {
+                    prevBtn.style.display = 'block';
+                    nextBtn.style.display = 'none';
+                    submitBtn.style.display = 'block';
+                }
+                
+                currentStep = step;
+                
+                document.querySelector('.step-content.active').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+            
+            function validateStep1() {
+                const username = document.querySelector('input[name="username"]');
+                const password = document.querySelector('input[name="password"]');
+                const pin = pinInput;
+                let isValid = true;
+                
+                [username, password, pin].forEach(input => {
+                    input.classList.remove('is-invalid');
+                });
+                
+                if (!username.value.trim() || username.value.length < 3) {
+                    username.classList.add('is-invalid');
+                    showValidationError('{% trans "El usuario debe tener al menos 3 caracteres" %}');
+                    isValid = false;
+                }
+                
+                if (!password.value || password.value.length < 8) {
+                    password.classList.add('is-invalid');
+                    showValidationError('{% trans "La contraseña debe tener al menos 8 caracteres" %}');
+                    isValid = false;
+                }
+                
+                if (!pin.value || !/^\d{4}$/.test(pin.value)) {
+                    pin.classList.add('is-invalid');
+                    showValidationError('{% trans "El PIN debe ser de exactamente 4 dígitos numéricos" %}');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            function validateStep2() {
+                const telefono = document.querySelector('input[name="telefono"]');
+                const fechaNacimiento = document.querySelector('input[name="fecha_nacimiento"]');
+                const genero = document.querySelector('select[name="genero"]');
+                let isValid = true;
+                
+                [telefono, fechaNacimiento, genero].forEach(input => {
+                    input.classList.remove('is-invalid');
+                });
+                
+                if (!telefono.value.trim()) {
+                    telefono.classList.add('is-invalid');
+                    showValidationError('{% trans "Por favor ingresa tu número de teléfono" %}');
+                    isValid = false;
+                }
+                
+                if (!fechaNacimiento.value) {
+                    fechaNacimiento.classList.add('is-invalid');
+                    showValidationError('{% trans "Por favor selecciona tu fecha de nacimiento" %}');
+                    isValid = false;
+                } else {
+                    const birthDate = new Date(fechaNacimiento.value);
+                    const today = new Date();
+                    if (birthDate >= today) {
+                        fechaNacimiento.classList.add('is-invalid');
+                        showValidationError('{% trans "La fecha de nacimiento debe ser en el pasado" %}');
+                        isValid = false;
+                    }
+                }
+                
+                if (!genero.value) {
+                    genero.classList.add('is-invalid');
+                    showValidationError('{% trans "Por favor selecciona tu género" %}');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            function showValidationError(message) {
+                let errorAlert = document.querySelector('.form-alert-danger');
+                if (!errorAlert) {
+                    errorAlert = document.createElement('div');
+                    errorAlert.className = 'form-alert form-alert-danger alert-dismissible fade show d-flex align-items-center';
+                    errorAlert.innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span class="flex-grow-1">${message}</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Cerrar' %}"></button>
+                    `;
+                    
+                    const messagesContainer = document.querySelector('.registration-messages');
+                    if (messagesContainer) {
+                        messagesContainer.prepend(errorAlert);
+                    } else {
+                        document.querySelector('.step-indicator').insertAdjacentElement('afterend', errorAlert);
+                    }
+                } else {
+                    errorAlert.querySelector('span').textContent = message;
+                }
+                
+                setTimeout(() => {
+                    if (errorAlert) {
+                        const bsAlert = new bootstrap.Alert(errorAlert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            }
+            
+            nextBtn.addEventListener('click', function() {
+                if (validateStep1()) {
+                    showStep(2);
+                }
+            });
+            
+            prevBtn.addEventListener('click', function() {
+                showStep(1);
+            });
+            
+            document.getElementById('registrationForm').addEventListener('submit', function(e) {
+                if (!validateStep1() || !validateStep2()) {
+                    e.preventDefault();
+                    showValidationError('{% trans "Por favor completa todos los campos requeridos correctamente." %}');
+                    showStep(1);
+                }
+            });
+            
+            document.querySelectorAll('input[required], select[required]').forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.value.trim() === '') {
+                        this.classList.add('is-invalid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                        if (this.checkValidity()) {
+                            this.classList.add('is-valid');
+                        }
+                    }
+                });
+            });
+            
+            showStep(1);
+        });
+    </script>
+</body>
+</html>

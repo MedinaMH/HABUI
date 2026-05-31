@@ -1,0 +1,169 @@
+{% extends 'estructura_base_PWMS.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Historial NASA TLX" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<div class="dashboard-container">
+    <div class="dashboard-grid">
+        <div class="welcome-card">
+            <!-- Título y botón nueva evaluación -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-clock-history me-2"></i> {% trans "Historial NASA TLX" %}</h2>
+                    <p class="text-muted mb-0">{% trans "Tus evaluaciones de carga mental (Task Load Index)" %}</p>
+                </div>
+                <div>
+                    <a href="{% url 'PWMS:nasa_tlx_create' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>{% trans "Nueva Evaluación" %}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjetas de estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-primary text-white stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white-50">{% trans "Total Evaluaciones" %}</h6>
+                                    <h2 class="display-6 mb-0">{{ total_evaluaciones|default:0 }}</h2>
+                                </div>
+                                <i class="bi bi-clipboard-check fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-info text-white stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white-50">{% trans "Carga de trabajo promedio" %}</h6>
+                                    <h2 class="display-6 mb-0">{{ promedio_carga|default:0 }}</h2>
+                                </div>
+                                <i class="bi bi-brain fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de evaluaciones -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm rounded-4">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-4 pb-2">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check me-2 text-primary"></i>
+                                {% trans "Evaluaciones de Carga Mental" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if evaluaciones %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{% trans "Fecha" %}</th>
+                                            <th>{% trans "Tarea" %}</th>
+                                            <th>{% trans "Puntuación TLX" %}</th>
+                                            <th>{% trans "Interpretación" %}</th>
+                                            <th>{% trans "Detalle" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for eval in evaluaciones %}
+                                        <tr>
+                                            <td>{{ eval.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ eval.tarea_descripcion|truncatechars:50|default:"—" }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if eval.puntuacion_total < 30 %}bg-success
+                                                    {% elif eval.puntuacion_total < 60 %}bg-warning text-dark
+                                                    {% else %}bg-danger{% endif %}">
+                                                    {{ eval.puntuacion_total|floatformat:1 }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if eval.puntuacion_total < 30 %}
+                                                    <span class="text-success fw-bold">{% trans "BAJA" %}</span>
+                                                {% elif eval.puntuacion_total < 60 %}
+                                                    <span class="text-warning fw-bold">{% trans "MODERADA" %}</span>
+                                                {% else %}
+                                                    <span class="text-danger fw-bold">{% trans "ALTA" %}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'PWMS:nasa_tlx_resultado' eval.id %}" class="btn btn-sm btn-outline-info rounded-pill">
+                                                    <i class="bi bi-eye"></i> {% trans "Ver" %}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Paginación -->
+                            {% if evaluaciones.has_other_pages %}
+                            <nav class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if evaluaciones.has_previous %}
+                                        <li class="page-item"><a class="page-link" href="?page=1">&laquo; {% trans "Primera" %}</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page={{ evaluaciones.previous_page_number }}">{% trans "Anterior" %}</a></li>
+                                    {% endif %}
+                                    <li class="page-item active"><span class="page-link">{% trans "Página" %} {{ evaluaciones.number }} {% trans "de" %} {{ evaluaciones.paginator.num_pages }}</span></li>
+                                    {% if evaluaciones.has_next %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ evaluaciones.next_page_number }}">{% trans "Siguiente" %}</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page={{ evaluaciones.paginator.num_pages }}">{% trans "Última" %} &raquo;</a></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-clipboard-x display-1 text-muted mb-3"></i>
+                                <h4 class="text-muted">{% trans "No hay evaluaciones registradas" %}</h4>
+                                <p class="text-muted mb-4">{% trans "Completa tu primera evaluación de carga mental" %}</p>
+                                <a href="{% url 'PWMS:nasa_tlx_create' %}" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-plus-circle me-2"></i>{% trans "Comenzar Evaluación" %}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+        border-radius: 1rem;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    .display-6 {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    .badge {
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+    }
+    .welcome-card {
+        background: white;
+        border-radius: 1.25rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05);
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}

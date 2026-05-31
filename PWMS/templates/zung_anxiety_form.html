@@ -1,0 +1,328 @@
+{% load static %}
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+<!doctype html>
+<html lang="{{ CURRENT_LANGUAGE }}">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% trans "Escala de Ansiedad de Zung" %} - PWMS</title>
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'css/estilos_panel_pwms.css' %}?v=2">
+    <style>
+        .welcome-card {
+            background: white;
+            border-radius: 1.25rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+        .form-select {
+            border-radius: 0.75rem;
+        }
+        .btn-danger {
+            border-radius: 2rem;
+            padding: 0.75rem 2rem;
+        }
+        .question-card {
+            transition: all 0.2s;
+            border-radius: 1rem;
+            background-color: #fff;
+        }
+        .question-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar navbar-dark bg-primary fixed-top d-flex justify-content-between align-items-center px-3" style="height: 85px;">
+        <a href="{% url 'panel_principal' %}" class="btn btn-outline-light d-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left-circle-fill fs-5"></i>
+            <span class="d-none d-sm-inline">{% trans "Panel principal" %}</span>
+        </a>
+        <div class="text-center flex-grow-1">
+            <span class="encabezado">{% trans "Sistema de Monitoreo del Bienestar Psicológico PWMS" %}</span>
+        </div>
+        <div class="d-flex align-items-center" style="width: 110px;">
+            <span class="text-light me-2 small d-none d-sm-inline">{{ user.username }}</span>
+            <form action="{% url 'set_language' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <select name="language" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto; background: rgba(255,255,255,0.2); color: white;">
+                    <option value="es" {% if CURRENT_LANGUAGE == 'es' %}selected{% endif %}>ES</option>
+                    <option value="en" {% if CURRENT_LANGUAGE == 'en' %}selected{% endif %}>EN</option>
+                </select>
+            </form>
+        </div>
+    </header>
+
+    <div style="display: flex; width: 100%;">
+        <nav class="sidebar" style="width: 260px; min-width: 260px; max-width: 260px;">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'PWMS:pwms_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>{% trans "Dashboard" %}</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#submenuPsico">
+                            <span><i class="bi bi-clipboard-plus"></i>{% trans "Registros Psicológicos" %}</span>
+                            <i class="bi bi-caret-down-fill small"></i>
+                        </a>
+                        <div class="collapse ps-4" id="submenuPsico">
+                            <ul class="nav flex-column">
+                                <li class="nav-item"><a class="nav-link" href="{% url 'PWMS:nuevo_registro_psicologico' %}"><i class="bi bi-plus-circle me-2"></i>{% trans "Nuevo Registro" %}</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{% url 'PWMS:historial_psicologico' %}"><i class="bi bi-clock-history me-2"></i>{% trans "Historial" %}</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'PWMS:perfil' %}"><i class="bi bi-person-circle me-2"></i>{% trans "Mi Perfil" %}</a></li>
+                    <li class="nav-item"><a class="nav-link text-danger" href="{% url 'PWMS:panel_logout' %}"><i class="bi bi-box-arrow-right me-2"></i>{% trans "Cerrar Sesión" %}</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main style="background-color: #f0f2f5; min-height: calc(100vh - 85px); width: calc(100% - 260px); padding: 2rem;">
+            <div class="dashboard-container">
+                <div class="dashboard-grid">
+                    <div class="welcome-card">
+                        <div class="text-center mb-4">
+                            <h2><i class="bi bi-clipboard-heart me-2 text-danger"></i> {% trans "Escala de Ansiedad de Zung (SAS)" %}</h2>
+                            <p class="text-muted">{% trans "Self-Rating Anxiety Scale - 20 preguntas" %}</p>
+                        </div>
+
+                        <div id="contenido-prueba">
+                            <form method="post" id="zung-form">
+                                {% csrf_token %}
+
+                                <div class="alert alert-info mb-4">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    {% trans "Lee cada frase y selecciona la frecuencia con la que has experimentado cada síntoma durante la" %} <strong>{% trans "última semana" %}</strong>.
+                                </div>
+
+                                <div class="row">
+                                    <!-- Pregunta 1 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "1. Me siento más nervioso y ansioso que de costumbre" %}</label>
+                                                {{ form.p01_me_siento_mas_nervioso }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 2 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "2. Siento miedo sin razón" %}</label>
+                                                {{ form.p02_siento_miedo_sin_razon }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 3 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "3. Me siento alterado o agitado" %}</label>
+                                                {{ form.p03_me_siento_alterado }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 4 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "4. Siento que me estoy desmoronando" %}</label>
+                                                {{ form.p04_siento_que_me_desmorono }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 5 (inversa) -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "5. Siento que todo está bien y no pasará nada malo" %}</label>
+                                                {{ form.p05_siento_que_todo_bien }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 6 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "6. Tiemblan mis manos, brazos o piernas" %}</label>
+                                                {{ form.p06_temblor_sacudidas }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 7 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "7. Tengo dolores de cabeza, cuello o espalda" %}</label>
+                                                {{ form.p07_dolores_cabeza_cuello }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 8 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "8. Me siento débil y me canso fácilmente" %}</label>
+                                                {{ form.p08_debilidad_fatiga }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 9 (inversa) -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "9. Me siento calmado y puedo permanecer en calma fácilmente" %}</label>
+                                                {{ form.p09_siento_calma_tranquilidad }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 10 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "10. Siento latidos del corazón rápidos" %}</label>
+                                                {{ form.p10_siento_latidos_corazon }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 11 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "11. Tengo mareos o vértigo" %}</label>
+                                                {{ form.p11_mareos }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 12 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "12. Siento que me voy a desmayar" %}</label>
+                                                {{ form.p12_desmayos }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 13 (inversa) -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "13. Puedo respirar normal" %}</label>
+                                                {{ form.p13_respiracion_normal }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 14 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "14. Tengo entumecimiento u hormigueo en dedos, manos o pies" %}</label>
+                                                {{ form.p14_entumecimiento_hormigueo }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 15 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "15. Tengo dolores de estómago o indigestión" %}</label>
+                                                {{ form.p15_dolores_estomacales }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 16 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "16. Tengo necesidad frecuente de orinar" %}</label>
+                                                {{ form.p16_necesidad_orinar }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 17 (inversa) -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "17. Mis manos están normalmente calientes y secas" %}</label>
+                                                {{ form.p17_manos_calidas_secas }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 18 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "18. Mi cara se sonroja y siento bochornos" %}</label>
+                                                {{ form.p18_sonrojo_bochorno }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 19 (inversa) -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "19. Duermo bien y descanso" %}</label>
+                                                {{ form.p19_duermo_bien_descanso }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Pregunta 20 -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card question-card border h-100">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold">{% trans "20. Tengo pesadillas" %}</label>
+                                                {{ form.p20_pesadillas }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="card question-card border">
+                                            <div class="card-body">
+                                                <label class="form-label fw-bold"><i class="bi bi-journal-text me-2"></i>{% trans "Observaciones adicionales" %}</label>
+                                                {{ form.observaciones }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-danger btn-lg px-5">
+                                        <i class="bi bi-check-circle me-2"></i>{% trans "Completar evaluación" %}
+                                    </button>
+                                    <a href="{% url 'PWMS:zung_anxiety_historial' %}" class="btn btn-outline-secondary btn-lg px-4 ms-2">
+                                        <i class="bi bi-arrow-left me-2"></i>{% trans "Cancelar" %}
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="mt-5 pt-3 border-top">
+                            <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>{% trans "Interpretación del Índice de Ansiedad de Zung" %}</h6>
+                            <div class="row">
+                                <div class="col-md-3"><span class="badge bg-success">25-44</span> {% trans "Normal" %}</div>
+                                <div class="col-md-3"><span class="badge bg-warning text-dark">45-59</span> {% trans "Ansiedad mínima a moderada" %}</div>
+                                <div class="col-md-3"><span class="badge bg-danger">60-74</span> {% trans "Ansiedad marcada a severa" %}</div>
+                                <div class="col-md-3"><span class="badge bg-dark">75-100</span> {% trans "Ansiedad extrema" %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="text-center py-3 bg-light border-top mt-auto">
+        <small>&copy; 2025 MACII CREDES</small>
+    </footer>
+
+    <script src="{% static 'js/bootstrap.bundle.js' %}"></script>
+</body>
+</html>

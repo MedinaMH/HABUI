@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +28,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'HABUI_APP', 'static'),
+    os.path.join(BASE_DIR, 'PWMS', 'static'),  # ← AGREGAR ESTA
+]
+
+#Configuracion de login para PWMS
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/login/'
 
 # Application definition
 
@@ -48,7 +57,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.http.ConditionalGetMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    #'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -63,7 +72,10 @@ ROOT_URLCONF = 'HABUI_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [ 
+            BASE_DIR / 'templates',           # Para templates compartidos
+            BASE_DIR / 'PWMS' / 'templates',  # Para templates de PWMS
+            ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -132,6 +144,11 @@ LOCALE_PATHS = [
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'  
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'foto_perfil')
+
+
 
 CHANNEL_LAYERS = {
     "default": {

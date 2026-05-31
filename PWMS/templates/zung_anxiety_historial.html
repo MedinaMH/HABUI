@@ -1,0 +1,203 @@
+{% extends 'estructura_base_PWMS.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Historial Zung - Escala de Ansiedad" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<div class="dashboard-container">
+    <div class="dashboard-grid">
+        <div class="welcome-card">
+            <!-- Encabezado y botón nueva evaluación -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-clock-history me-2"></i> {% trans "Historial de Escala de Ansiedad de Zung" %}</h2>
+                    <p class="text-muted mb-0">{% trans "Registro de tus evaluaciones de ansiedad (Self-Rating Anxiety Scale)" %}</p>
+                </div>
+                <div>
+                    <a href="{% url 'PWMS:zung_anxiety_nuevo' %}" class="btn btn-danger btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>{% trans "Nueva Evaluación" %}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjetas de estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-primary text-white stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white-50">{% trans "Total Evaluaciones" %}</h6>
+                                    <h2 class="display-6 mb-0">{{ total_evaluaciones|default:0 }}</h2>
+                                </div>
+                                <i class="bi bi-clipboard-check fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-danger text-white stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white-50">{% trans "Índice de ansiedad promedio" %}</h6>
+                                    <h2 class="display-6 mb-0">{{ promedio_indice|floatformat:1|default:0 }}</h2>
+                                </div>
+                                <i class="bi bi-emoji-frown fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de evaluaciones -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm rounded-4">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-4 pb-2">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check me-2 text-danger"></i>
+                                {% trans "Registros de la Escala de Zung" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if pruebas %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th><i class="bi bi-calendar-event me-1"></i> {% trans "Fecha" %}</th>
+                                            <th><i class="bi bi-percent me-1"></i> {% trans "Índice Zung" %}</th>
+                                            <th><i class="bi bi-emoji-frown me-1"></i> {% trans "Nivel de Ansiedad" %}</th>
+                                            <th><i class="bi bi-journal-text me-1"></i> {% trans "Observaciones" %}</th>
+                                            <th><i class="bi bi-eye me-1"></i> {% trans "Detalle" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prueba in pruebas %}
+                                        <tr>
+                                            <td>{{ prueba.fecha_registro|date:"d/m/Y H:i" }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if prueba.puntuacion_indice <= 44 %}bg-success
+                                                    {% elif prueba.puntuacion_indice <= 59 %}bg-warning text-dark
+                                                    {% elif prueba.puntuacion_indice <= 74 %}bg-danger
+                                                    {% else %}bg-dark{% endif %}
+                                                    fs-6 px-3 py-2">
+                                                    {{ prueba.puntuacion_indice }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="
+                                                    {% if prueba.nivel_ansiedad == 'normal' %}text-success
+                                                    {% elif prueba.nivel_ansiedad == 'minima' %}text-warning
+                                                    {% elif prueba.nivel_ansiedad == 'marcada' %}text-danger
+                                                    {% else %}text-dark{% endif %} fw-bold">
+                                                    {{ prueba.get_nivel_ansiedad_display }}
+                                                </span>
+                                            </div>
+                                            </div>
+                                            <td class="small text-muted">{{ prueba.observaciones|truncatechars:60|default:"—" }} </td>
+                                            <td>
+                                                <a href="{% url 'PWMS:zung_anxiety_resultados' prueba.id %}" 
+                                                   class="btn btn-sm btn-outline-info rounded-pill"
+                                                   data-bs-toggle="tooltip"
+                                                   title="{% trans 'Ver resultados completos' %}">
+                                                    <i class="bi bi-eye"></i> {% trans "Ver" %}
+                                                </a>
+                                            </td>
+                                         </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Paginación -->
+                            {% if pruebas.has_other_pages %}
+                            <nav class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if pruebas.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">&laquo; {% trans "Primera" %}</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ pruebas.previous_page_number }}">{% trans "Anterior" %}</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">{% trans "Página" %} {{ pruebas.number }} {% trans "de" %} {{ pruebas.paginator.num_pages }}</span>
+                                    </li>
+                                    
+                                    {% if pruebas.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ pruebas.next_page_number }}">{% trans "Siguiente" %}</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ pruebas.paginator.num_pages }}">{% trans "Última" %} &raquo;</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-clipboard-x display-1 text-muted mb-3"></i>
+                                <h4 class="text-muted">{% trans "No hay evaluaciones registradas" %}</h4>
+                                <p class="text-muted mb-4">{% trans "Completa tu primera escala de ansiedad de Zung" %}</p>
+                                <a href="{% url 'PWMS:zung_anxiety_nuevo' %}" class="btn btn-danger btn-lg">
+                                    <i class="bi bi-plus-circle me-2"></i>{% trans "Comenzar Evaluación" %}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+        border-radius: 1rem;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    .display-6 {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    .badge {
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+    }
+    .welcome-card {
+        background: white;
+        border-radius: 1.25rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05);
+        padding: 1.5rem;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

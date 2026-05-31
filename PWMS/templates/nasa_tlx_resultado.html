@@ -1,0 +1,323 @@
+{% extends 'estructura_base_PWMS.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Resultado NASA TLX" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<style>
+    .display-1 {
+        font-size: 5rem;
+        font-weight: 700;
+    }
+    .display-6 {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    .progress {
+        border-radius: 15px;
+        background-color: #e9ecef;
+        height: 25px;
+    }
+    .progress-bar {
+        border-radius: 15px;
+        line-height: 25px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .contenedor-carita {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .circulo-exterior {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .circulo-interior {
+        width: 130px;
+        height: 130px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.05), 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .circulo-interior i {
+        font-size: 4.5rem;
+    }
+    
+    .exterior-bajo { background: linear-gradient(135deg, #28a745, #20c997); box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3); }
+    .exterior-moderado { background: linear-gradient(135deg, #fd7e14, #ffc107); box-shadow: 0 8px 25px rgba(253, 126, 20, 0.3); }
+    .exterior-alto { background: linear-gradient(135deg, #dc3545, #c82333); box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3); }
+    .exterior-extremo { background: linear-gradient(135deg, #6c757d, #495057); box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3); }
+    
+    /* Centro perfecto para la interpretación */
+    .centro-perfecto {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+        .display-1 { font-size: 3.5rem; }
+        .circulo-exterior { width: 130px; height: 130px; }
+        .circulo-interior { width: 105px; height: 105px; }
+        .circulo-interior i { font-size: 3rem; }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-grid">
+        <div class="welcome-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-clipboard-heart me-2 text-danger"></i>{% trans "Resultado NASA TLX" %}</h2>
+                    <p class="text-muted mb-0">{{ evaluacion.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'PWMS:nasa_tlx_historial' %}" class="btn btn-outline-info me-2">
+                        <i class="bi bi-clock-history me-1"></i>{% trans "Historial" %}
+                    </a>
+                    <a href="{% url 'PWMS:nasa_tlx_create' %}" class="btn btn-primary me-2">
+                        <i class="bi bi-plus-circle me-1"></i>{% trans "Nueva Evaluación" %}
+                    </a>
+                    <a href="{% url 'PWMS:pwms_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>{% trans "Dashboard" %}
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card mb-4">
+                        <div class="card-body text-center p-5">
+                            
+                            <div class="contenedor-carita">
+                                <div class="circulo-exterior 
+                                    {% if evaluacion.puntuacion_total <= 30 %}exterior-bajo
+                                    {% elif evaluacion.puntuacion_total <= 60 %}exterior-moderado
+                                    {% elif evaluacion.puntuacion_total <= 79 %}exterior-alto
+                                    {% else %}exterior-extremo{% endif %}">
+                                    <div class="circulo-interior">
+                                        {% if evaluacion.puntuacion_total <= 30 %}
+                                            <i class="bi bi-emoji-smile-fill text-success"></i>
+                                        {% elif evaluacion.puntuacion_total <= 60 %}
+                                            <i class="bi bi-emoji-neutral-fill text-warning"></i>
+                                        {% elif evaluacion.puntuacion_total <= 79 %}
+                                            <i class="bi bi-emoji-frown-fill text-danger"></i>
+                                        {% else %}
+                                            <i class="bi bi-emoji-dizzy-fill text-secondary"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Interpretación CENTRADA LITERALMENTE -->
+                            <div class="centro-perfecto">
+                                <h2 class="mb-3 mt-2 
+                                    {% if evaluacion.puntuacion_total <= 30 %}text-success
+                                    {% elif evaluacion.puntuacion_total <= 60 %}text-warning
+                                    {% elif evaluacion.puntuacion_total <= 79 %}text-danger
+                                    {% else %}text-secondary{% endif %}">
+                                    {% if interpretacion == "Carga BAJA" %}
+                                        {% trans "Carga BAJA" %}
+                                    {% elif interpretacion == "Carga MODERADA" %}
+                                        {% trans "Carga MODERADA" %}
+                                    {% elif interpretacion == "Carga ALTA" %}
+                                        {% trans "Carga ALTA" %}
+                                    {% elif interpretacion == "Carga EXTREMA" %}
+                                        {% trans "Carga EXTREMA" %}
+                                    {% else %}
+                                        {{ interpretacion }}
+                                    {% endif %}
+                                </h2>
+                            </div>
+                            
+                            <h1 class="display-1 fw-bold 
+                                {% if evaluacion.puntuacion_total <= 30 %}text-success
+                                {% elif evaluacion.puntuacion_total <= 60 %}text-warning
+                                {% elif evaluacion.puntuacion_total <= 79 %}text-danger
+                                {% else %}text-secondary{% endif %}">
+                                {{ evaluacion.puntuacion_total|floatformat:0 }}
+                            </h1>
+                            <p class="text-muted lead">{% trans "Puntuación NASA TLX (0-100)" %}</p>
+                            
+                            <hr class="my-4">
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="text-muted mb-2">{% trans "Tarea Evaluada" %}</h5>
+                                    <p class="lead fw-normal">{{ evaluacion.tarea_descripcion }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dimensiones NASA TLX -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bar-chart-steps me-2"></i>
+                                {% trans "Dimensiones de Carga Mental" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 35%;">{% trans "Dimensión" %}</th>
+                                            <th style="width: 20%;">{% trans "Puntuación" %}</th>
+                                            <th style="width: 15%;">{% trans "Peso" %}</th>
+                                            <th style="width: 30%;">{% trans "Contribución" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for dim in dimensiones %}
+                                        <tr>
+                                            <td>
+                                                <strong>
+                                                    {% if dim.dimension == "Demanda Mental" %}{% trans "Demanda Mental" %}
+                                                    {% elif dim.dimension == "Demanda Física" %}{% trans "Demanda Física" %}
+                                                    {% elif dim.dimension == "Demanda Temporal" %}{% trans "Demanda Temporal" %}
+                                                    {% elif dim.dimension == "Rendimiento" %}{% trans "Rendimiento" %}
+                                                    {% elif dim.dimension == "Esfuerzo" %}{% trans "Esfuerzo" %}
+                                                    {% elif dim.dimension == "Frustración" %}{% trans "Frustración" %}
+                                                    {% else %}{{ dim.dimension }}
+                                                    {% endif %}
+                                                </strong>
+                                                {% if dim.dimension == 'Rendimiento' %}
+                                                    <i class="bi bi-info-circle-fill text-info ms-1" data-bs-toggle="tooltip" title="{% trans 'Alta puntuación = Buen rendimiento = Menor carga' %}"></i>
+                                                {% endif %}
+                                            </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>         
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+                    </div> -->
+                                            
+                                              <td class="text-center">
+                                                 <span class="badge bg-secondary fs-6">{{ dim.puntuacion }}</span>
+                                                </div>
+                                                <td class="text-center">
+                                                 <span class="badge bg-dark">{{ dim.peso }}</span>
+                                                </div>
+                                                <td>
+                                                 <div class="progress">
+                                                     <div class="progress-bar 
+                                                         {% if dim.dimension == 'Demanda Mental' %}bg-info
+                                                         {% elif dim.dimension == 'Demanda Física' %}bg-success
+                                                         {% elif dim.dimension == 'Demanda Temporal' %}bg-warning
+                                                         {% elif dim.dimension == 'Rendimiento' %}bg-primary
+                                                         {% elif dim.dimension == 'Esfuerzo' %}bg-danger
+                                                         {% else %}bg-secondary{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {% widthratio dim.puntuacion 20 100 %}%;"
+                                                         aria-valuenow="{{ dim.puntuacion }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="20">
+                                                         {{ dim.puntuacion }}
+                                                     </div>
+                                                 </div>
+                                                </div>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if evaluacion.notas_adicionales %}
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-journal-text me-2"></i>
+                                {% trans "Notas Adicionales" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ evaluacion.notas_adicionales|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                {% trans "Escala de Interpretación NASA TLX" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-success mb-2">0-30</div>
+                                            <h6 class="fw-bold text-success">{% trans "Carga BAJA" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-smile-fill"></i> {% trans "Tarea fácil" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-warning mb-2">31-60</div>
+                                            <h6 class="fw-bold text-warning">{% trans "Carga MODERADA" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-neutral-fill"></i> {% trans "Tarea manejable" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-danger h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-danger mb-2">61-79</div>
+                                            <h6 class="fw-bold text-danger">{% trans "Carga ALTA" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-frown-fill"></i> {% trans "Tarea demandante" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-secondary h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-secondary mb-2">80-100</div>
+                                            <h6 class="fw-bold text-secondary">{% trans "Carga EXTREMA" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-dizzy-fill"></i> {% trans "Muy demandante" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

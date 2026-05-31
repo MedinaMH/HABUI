@@ -1,0 +1,205 @@
+{% extends "estructura_base_PWMS.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Mi Perfil" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1><i class="bi bi-person-circle me-2"></i>{% trans "Mi Perfil PWMS" %}</h1>
+        <div>
+            <span class="last-update">{% trans "Miembro desde:" %} {{ user.date_joined|date:"d/m/Y" }}</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna izquierda - Foto y PIN -->
+        <div class="col-md-4 mb-4">
+            <div class="welcome-card text-center">
+                <div class="mb-4">
+                    {% if perfil.foto %}
+                    <img src="{{ perfil.foto.url }}" 
+                        class="img-fluid rounded-circle mb-3"
+                        style="width:150px; height:150px; object-fit:cover;">
+                    {% else %}
+                        <i class="bi bi-person-circle" style="font-size: 6rem; color: var(--azul-primario);"></i>
+                    {% endif %}
+                </div>
+                <h3 class="h4 mb-1" style="color: var(--gris-oscuro);">{{ user.get_full_name|default:user.username }}</h3>
+                <p class="text-muted mb-2">{{ user.email }}</p>
+                
+                <!-- PIN DE 4 DÍGITOS -->
+                <div class="mt-3 p-3 bg-light rounded-3">
+                    <small class="text-muted d-block mb-1">{% trans "PIN de acceso rápido" %}</small>
+                    <span class="fs-2 fw-bold" style="color: var(--azul-primario); letter-spacing: 8px;">
+                        {{ perfil.pin|default:"****" }}
+                    </span>
+                </div>
+
+                <!-- Botón para completar perfil -->
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{% url 'PWMS:completar_perfil' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-2"></i>{% trans "Completar perfil" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha - Información detallada -->
+        <div class="col-md-8 mb-4">
+            <!-- Datos Personales -->
+            <div class="welcome-card mb-4">
+                <h4 class="mb-4" style="color: var(--gris-oscuro);">
+                    <i class="bi bi-person-lines-fill me-2" style="color: var(--azul-primario);"></i>
+                    {% trans "Datos Personales" %}
+                </h4>
+                
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 35%;">{% trans "Nombre completo:" %}</td>
+                            <td class="fw-bold">{{ perfil.nombre_completo|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Nombre de usuario:" %}</td>
+                            <td>{{ user.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Fecha de nacimiento:" %}</td>
+                            <td>{{ perfil.fecha_nacimiento|date:"d/m/Y"|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Género:" %}</td>
+                            <td>{{ perfil.get_genero_display|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Teléfono:" %}</td>
+                            <td>{{ perfil.telefono|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Correo electrónico:" %}</td>
+                            <td>{{ user.email|default:"—" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Información Médica -->
+            <div class="welcome-card mb-4">
+                <h4 class="mb-4" style="color: var(--gris-oscuro);">
+                    <i class="bi bi-heart-pulse me-2" style="color: var(--azul-primario);"></i>
+                    {% trans "Información Médica" %}
+                </h4>
+                
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 35%;">{% trans "Grupo sanguíneo:" %}</td>
+                            <td><span class="badge bg-danger px-3 py-2">{{ perfil.grupo_sanguineo|default:_("No especificado") }}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Alergias:" %}</td>
+                                            <td>{{ perfil.alergias|default:_("Ninguna registrada")|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Medicamentos:" %}</td>
+                            <td>{{ perfil.medicamentos|default:_("Ninguno registrado") }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Condiciones médicas:" %}</td>
+                            <td>{{ perfil.condiciones_medicas|default:_("Ninguna registrada") }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Información Psicológica -->
+            <div class="welcome-card mb-4">
+                <h4 class="mb-4" style="color: var(--gris-oscuro);">
+                    <i class="bi bi-brain me-2" style="color: var(--azul-primario);"></i>
+                    {% trans "Seguimiento Psicológico" %}
+                </h4>
+                
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 35%;">{% trans "Fecha de ingreso:" %}</td>
+                            <td class="fw-bold">{{ perfil.fecha_ingreso|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Psicólogo asignado:" %}</td>
+                            <td>{{ perfil.psicologo_asignado|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Motivo de consulta:" %}</td>
+                            <td>{{ perfil.motivo_consulta|default:"—"|linebreaks }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Configuración -->
+            <div class="welcome-card">
+                <h4 class="mb-4" style="color: var(--gris-oscuro);">
+                    <i class="bi bi-gear me-2" style="color: var(--azul-primario);"></i>
+                    {% trans "Configuración de Privacidad" %}
+                </h4>
+                
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 50%;">{% trans "Compartir datos médicos:" %}</td>
+                            <td>
+                                {% if perfil.compartir_datos_medicos %}
+                                    <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle me-1"></i>{% trans "Sí" %}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary px-3 py-2"><i class="bi bi-x-circle me-1"></i>{% trans "No" %}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">{% trans "Recibir recordatorios:" %}</td>
+                            <td>
+                                {% if perfil.recibir_recordatorios %}
+                                    <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle me-1"></i>{% trans "Sí" %}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary px-3 py-2"><i class="bi bi-x-circle me-1"></i>{% trans "No" %}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="welcome-card mt-4">
+                <h4 class="mb-4" style="color: var(--gris-oscuro);">
+                    <i class="bi bi-graph-up me-2" style="color: var(--azul-primario);"></i>
+                    {% trans "Resumen de Actividad" %}
+                </h4>
+                <div class="row">
+                    <div class="col-6 text-center">
+                        <span class="text-muted d-block">{% trans "Registros Psicológicos" %}</span>
+                        <span class="fs-2 fw-bold" style="color: var(--azul-primario);">{{ total_psicologico|default:"0" }}</span>
+                    </div>
+                    <div class="col-6 text-center">
+                        <span class="text-muted d-block">{% trans "Registros Fisiológicos" %}</span>
+                        <span class="fs-2 fw-bold" style="color: var(--azul-primario);">{{ total_fisiologico|default:"0" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table td {
+        padding: 0.75rem 0;
+        border: none;
+    }
+    .badge {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}

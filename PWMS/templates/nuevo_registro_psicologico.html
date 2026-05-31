@@ -1,0 +1,91 @@
+{% extends 'estructura_base_PWMS.html' %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Registro Psicológico" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<div class="dashboard-container">
+    <div class="dashboard-grid">
+        <div class="welcome-card">
+            <h2><i class="bi bi-clipboard-plus"></i> {% trans "Nuevo registro psicológico" %}</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-primary mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>{% trans "Recuerda:" %}</strong> {% trans "El registro de las pruebas es confidencial y te ayudará a llevar un seguimiento de tu bienestar emocional. Intenta ser lo más honesto posible." %}
+                    </div>
+
+                    <div class="alert alert-warning mb-4">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>{% trans "Consejo:" %}</strong> {% trans "Intenta hacer este registro a la misma hora cada día para obtener datos consistentes." %}
+                    </div>
+
+                    <!-- Fila centrada -->
+                    <div class="row mt-4 justify-content-center">
+                        <!-- Feature card: NASA TLX -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <span class="feature-icon display-4">📊</span>
+                                    <h5 class="card-title mt-3">NASA TLX</h5>
+                                    <p class="card-text text-muted">{% trans "Mide la carga mental de trabajo" %}</p>
+                                    <div class="mt-3">
+                                        <a href="{% url 'PWMS:nasa_tlx_create' %}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-plus-circle"></i> {% trans "Nuevo registro" %}
+                                        </a>
+                                        <a href="{% url 'PWMS:nasa_tlx_historial' %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-clock-history"></i> {% trans "Historial" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature card: Zung Anxiety -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <span class="feature-icon display-4">😟</span>
+                                    <h5 class="card-title mt-3">{% trans "Escala de Ansiedad de Zung" %}</h5>
+                                    <p class="card-text text-muted">{% trans "Evalúa síntomas de ansiedad" %}</p>
+                                    <div class="mt-3">
+                                        <a href="/pwms/zung-anxiety/nuevo/" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-plus-circle"></i> {% trans "Nuevo registro" %}
+                                        </a>
+                                        <a href="/pwms/zung-anxiety/historial/" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-clock-history"></i> {% trans "Historial" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .feature-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 1rem;
+        background-color: #fff;
+        border: 1px solid #e9ecef;  /* Borde gris sutil */
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important;
+        border-color: #dee2e6;      /* Borde un poco más oscuro al pasar el mouse */
+    }
+    .feature-icon {
+        font-size: 3rem;
+        line-height: 1;
+    }
+    .feature-card .btn {
+        border-radius: 2rem;
+        padding: 0.25rem 1rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}

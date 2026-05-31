@@ -1,0 +1,358 @@
+{% extends 'estructura_base_PWMS.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Resultados Zung - Escala de Ansiedad" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<style>
+    .display-1 {
+        font-size: 5rem;
+        font-weight: 700;
+    }
+    .display-6 {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    .progress {
+        border-radius: 15px;
+        background-color: #e9ecef;
+    }
+    .progress-bar {
+        border-radius: 15px;
+        line-height: 25px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .contenedor-carita {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .circulo-exterior {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .circulo-interior {
+        width: 130px;
+        height: 130px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.05), 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .circulo-interior i {
+        font-size: 4.5rem;
+    }
+    
+    /* Zung - Colores de fondo según nivel */
+    .exterior-normal {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    }
+    .exterior-minima {
+        background: linear-gradient(135deg, #fd7e14, #ffc107);
+        box-shadow: 0 8px 25px rgba(253, 126, 20, 0.3);
+    }
+    .exterior-marcada {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+    }
+    .exterior-extrema {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+    }
+    
+    /* Centro perfecto para la interpretación */
+    .centro-perfecto {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        text-align: center;
+    }
+    
+    @keyframes pulse-glow {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+    .circulo-exterior {
+        animation: pulse-glow 2s ease-in-out infinite;
+    }
+    
+    @media (max-width: 768px) {
+        .display-1 {
+            font-size: 3.5rem;
+        }
+        .circulo-exterior {
+            width: 130px;
+            height: 130px;
+        }
+        .circulo-interior {
+            width: 105px;
+            height: 105px;
+        }
+        .circulo-interior i {
+            font-size: 3rem;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-grid">
+        <div class="welcome-card">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2><i class="bi bi-clipboard-heart me-2 text-danger"></i>{% trans "Resultados de la Escala de Ansiedad de Zung" %}</h2>
+                    <p class="text-muted mb-0">{{ prueba.fecha_registro|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'PWMS:zung_anxiety_historial' %}" class="btn btn-outline-info btn-sm me-2">
+                        <i class="bi bi-clock-history me-1"></i>{% trans "Ver historial" %}
+                    </a>
+                    <a href="{% url 'PWMS:zung_anxiety_nuevo' %}" class="btn btn-danger btn-sm me-2">
+                        <i class="bi bi-plus-circle me-1"></i>{% trans "Nueva evaluación" %}
+                    </a>
+                    <a href="{% url 'PWMS:pwms_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i>{% trans "Dashboard" %}
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <!-- Tarjeta de Resultado Principal -->
+                    <div class="card mb-4">
+                        <div class="card-body text-center p-5">
+                            
+                            <!-- CARITA CENTRADA -->
+                            <div class="contenedor-carita">
+                                <div class="circulo-exterior 
+                                    {% if prueba.puntuacion_indice <= 44 %}exterior-normal
+                                    {% elif prueba.puntuacion_indice <= 59 %}exterior-minima
+                                    {% elif prueba.puntuacion_indice <= 74 %}exterior-marcada
+                                    {% else %}exterior-extrema{% endif %}">
+                                    <div class="circulo-interior">
+                                        {% if prueba.puntuacion_indice <= 44 %}
+                                            <i class="bi bi-emoji-smile-fill text-success"></i>
+                                        {% elif prueba.puntuacion_indice <= 59 %}
+                                            <i class="bi bi-emoji-neutral-fill text-warning"></i>
+                                        {% elif prueba.puntuacion_indice <= 74 %}
+                                            <i class="bi bi-emoji-frown-fill text-danger"></i>
+                                        {% else %}
+                                            <i class="bi bi-emoji-dizzy-fill text-secondary"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Interpretación CENTRADA -->
+                            <div class="centro-perfecto">
+                                <h2 class="mb-3 mt-2 
+                                    {% if prueba.puntuacion_indice <= 44 %}text-success
+                                    {% elif prueba.puntuacion_indice <= 59 %}text-warning
+                                    {% elif prueba.puntuacion_indice <= 74 %}text-danger
+                                    {% else %}text-secondary{% endif %}">
+                                    {% if prueba.puntuacion_indice <= 44 %}
+                                        {% trans "Normal" %}
+                                    {% elif prueba.puntuacion_indice <= 59 %}
+                                        {% trans "Ansiedad mínima a moderada" %}
+                                    {% elif prueba.puntuacion_indice <= 74 %}
+                                        {% trans "Ansiedad marcada a severa" %}
+                                    {% else %}
+                                        {% trans "Ansiedad extrema" %}
+                                    {% endif %}
+                                </h2>
+                            </div>
+                            
+                            <h1 class="display-1 fw-bold 
+                                {% if prueba.puntuacion_indice <= 44 %}text-success
+                                {% elif prueba.puntuacion_indice <= 59 %}text-warning
+                                {% elif prueba.puntuacion_indice <= 74 %}text-danger
+                                {% else %}text-secondary{% endif %}">
+                                {{ prueba.puntuacion_indice|floatformat:0 }}
+                            </h1>
+                            <p class="text-muted lead">{% trans "Índice de Ansiedad de Zung (25-100)" %}</p>
+                            
+                            <hr class="my-4">
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="text-muted mb-2">{% trans "Fecha de evaluación" %}</h5>
+                                    <p class="lead fw-normal">{{ prueba.fecha_registro|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detalles de la evaluación -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bar-chart-steps me-2 text-danger"></i>
+                                {% trans "Detalles de la evaluación" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 40%;">{% trans "Métrica" %}</th>
+                                            <th style="width: 30%;">{% trans "Puntuación" %}</th>
+                                            <th style="width: 30%;">{% trans "Interpretación" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>{% trans "Puntuación bruta" %}</strong></td>
+                                            <td><span class="badge bg-secondary fs-6 px-3 py-2">{{ prueba.puntuacion_bruta }}</span></td>
+                                            <td><small class="text-muted">{% trans "Rango 20-80" %}</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>{% trans "Índice estandarizado" %}</strong></td>
+                                            <td><span class="badge 
+                                                {% if prueba.puntuacion_indice <= 44 %}bg-success
+                                                {% elif prueba.puntuacion_indice <= 59 %}bg-warning text-dark
+                                                {% elif prueba.puntuacion_indice <= 74 %}bg-danger
+                                                {% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                                                {{ prueba.puntuacion_indice|floatformat:0 }}
+                                            </span></td>
+                                            <td><small class="text-muted">{% trans "Rango 25-100" %}</small></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Distribución de respuestas -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-pie-chart me-2 text-danger"></i>
+                                {% trans "Distribución de respuestas" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <div class="border rounded p-3">
+                                        <div class="display-6 text-success">{{ conteo_r1|default:0 }}</div>
+                                        <small>{% trans "Rara vez" %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="border rounded p-3">
+                                        <div class="display-6 text-info">{{ conteo_r2|default:0 }}</div>
+                                        <small>{% trans "Algunas veces" %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="border rounded p-3">
+                                        <div class="display-6 text-warning">{{ conteo_r3|default:0 }}</div>
+                                        <small>{% trans "Buena parte" %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="border rounded p-3">
+                                        <div class="display-6 text-danger">{{ conteo_r4|default:0 }}</div>
+                                        <small>{% trans "Mayor parte" %}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    {% if prueba.observaciones %}
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-journal-text me-2 text-danger"></i>
+                                {% trans "Observaciones" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ prueba.observaciones|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Escala de Interpretación -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle me-2 text-danger"></i>
+                                {% trans "Escala de Interpretación del Índice de Ansiedad de Zung" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-success mb-2">25-44</div>
+                                            <h6 class="fw-bold text-success">{% trans "Normal" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-smile-fill"></i> {% trans "Dentro de lo normal" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-warning mb-2">45-59</div>
+                                            <h6 class="fw-bold text-warning">{% trans "Ansiedad mínima a moderada" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-neutral-fill"></i> {% trans "Síntomas leves" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-danger h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-danger mb-2">60-74</div>
+                                            <h6 class="fw-bold text-danger">{% trans "Ansiedad marcada a severa" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-frown-fill"></i> {% trans "Síntomas significativos" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-secondary h-100">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 text-secondary mb-2">75-100</div>
+                                            <h6 class="fw-bold text-secondary">{% trans "Ansiedad extrema" %}</h6>
+                                            <p class="small text-muted mb-0"><i class="bi bi-emoji-dizzy-fill"></i> {% trans "Síntomas muy severos" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

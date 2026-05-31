@@ -1,0 +1,549 @@
+{% extends 'PWMS/estructura_base_PWMS.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Historial Fisiológico" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<div class="dashboard-container">
+    <div class="dashboard-grid">
+        <div class="welcome-card">
+            <!-- Encabezado -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-clock-history me-2"></i> {% trans "Historial Fisiológico" %}</h2>
+                    <p class="text-muted mb-0">{% trans "Tus registros de signos vitales y actividad" %}</p>
+                </div>
+                <div>
+                    <a href="{% url 'PWMS:nuevo_registro_fisiologico' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>{% trans "Nuevo Registro" %}
+                    </a>
+                </div>
+            </div>
+
+            {% if registros %}
+            
+            <!-- ================= GRÁFICA FRECUENCIA CARDÍACA ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-4 shadow-sm">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-3">
+                            <h5 class="mb-0"><i class="bi bi-heart-pulse me-2 text-danger"></i> {% trans "Evolución de Frecuencia Cardíaca" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="chartFC" style="width:100%; height:350px"></canvas>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-info me-2">🔵 {% trans "Bajo" %} (&lt;60)</span>
+                                <span class="badge bg-success me-2">🟢 {% trans "Normal" %} (60-100)</span>
+                                <span class="badge bg-warning me-2">🟡 {% trans "Elevado" %} (101-120)</span>
+                                <span class="badge bg-danger">🔴 {% trans "Crítico" %} (&gt;120)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= GRÁFICA PRESIÓN ARTERIAL ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-4 shadow-sm">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-3">
+                            <h5 class="mb-0"><i class="bi bi-activity me-2 text-primary"></i> {% trans "Evolución de Presión Arterial" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="chartPresion" style="width:100%; height:350px"></canvas>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-success me-2">🟢 {% trans "Óptima" %} (&lt;120/80)</span>
+                                <span class="badge bg-warning me-2">🟡 {% trans "Normal" %} (120-129/80-84)</span>
+                                <span class="badge bg-orange me-2">🟠 {% trans "Elevada" %} (130-139/85-89)</span>
+                                <span class="badge bg-danger">🔴 {% trans "Hipertensión" %} (&gt;140/90)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= GRÁFICA TEMPERATURA ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-4 shadow-sm">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-3">
+                            <h5 class="mb-0"><i class="bi bi-thermometer-half me-2 text-warning"></i> {% trans "Evolución de Temperatura" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="chartTemp" style="width:100%; height:350px"></canvas>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-info me-2">🔵 {% trans "Hipotermia" %} (&lt;36.0°C)</span>
+                                <span class="badge bg-success me-2">🟢 {% trans "Normal" %} (36.0-37.5°C)</span>
+                                <span class="badge bg-warning me-2">🟡 {% trans "Febrícula" %} (37.6-38.0°C)</span>
+                                <span class="badge bg-danger">🔴 {% trans "Fiebre" %} (&gt;38.0°C)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= GRÁFICA OXIGENACIÓN ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-4 shadow-sm">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-3">
+                            <h5 class="mb-0"><i class="bi bi-lungs me-2 text-info"></i> {% trans "Evolución de Oxigenación (SpO2)" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="chartSpO2" style="width:100%; height:350px"></canvas>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-danger me-2">🔴 {% trans "Crítico" %} (&lt;90%)</span>
+                                <span class="badge bg-warning me-2">🟡 {% trans "Bajo" %} (90-94%)</span>
+                                <span class="badge bg-success">🟢 {% trans "Normal" %} (≥95%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= GRÁFICA ESTRÉS ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-4 shadow-sm">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-3">
+                            <h5 class="mb-0"><i class="bi bi-lightning-charge me-2 text-danger"></i> {% trans "Evolución del Nivel de Estrés" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="chartEstres" style="width:100%; height:350px"></canvas>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-info me-2">🔵 {% trans "Bajo" %} (0-25)</span>
+                                <span class="badge bg-success me-2">🟢 {% trans "Moderado" %} (26-50)</span>
+                                <span class="badge bg-warning me-2">🟡 {% trans "Alto" %} (51-75)</span>
+                                <span class="badge bg-danger">🔴 {% trans "Muy Alto" %} (76-100)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= GRÁFICA SUEÑO ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-4 shadow-sm">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-3">
+                            <h5 class="mb-0"><i class="bi bi-moon-stars me-2 text-secondary"></i> {% trans "Evolución de Horas de Sueño" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="chartSueno" style="width:100%; height:350px"></canvas>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-danger me-2">🔴 {% trans "Insuficiente" %} (&lt;6h)</span>
+                                <span class="badge bg-success me-2">🟢 {% trans "Adecuado" %} (6-8h)</span>
+                                <span class="badge bg-warning">🟡 {% trans "Excesivo" %} (&gt;8h)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= GRÁFICA PASOS ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-4 shadow-sm">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-3">
+                            <h5 class="mb-0"><i class="bi bi-footsteps me-2 text-success"></i> {% trans "Evolución de Pasos Diarios" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="chartPasos" style="width:100%; height:350px"></canvas>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-danger me-2">🔴 {% trans "Sedentario" %} (&lt;5000)</span>
+                                <span class="badge bg-warning me-2">🟡 {% trans "Bajo" %} (5000-7499)</span>
+                                <span class="badge bg-success me-2">🟢 {% trans "Moderado" %} (7500-9999)</span>
+                                <span class="badge bg-info">🔵 {% trans "Activo" %} (≥10000)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TABLA DE REGISTROS ================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card shadow-sm rounded-4">
+                        <div class="card-header bg-white rounded-top-4 border-0 pt-4 pb-2">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check me-2 text-primary"></i>
+                                {% trans "Registros Fisiológicos" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{% trans "Fecha" %}</th>
+                                            <th>{% trans "FC" %}</th>
+                                            <th>{% trans "Presión" %}</th>
+                                            <th>{% trans "Temperatura" %}</th>
+                                            <th>{% trans "SpO2" %}</th>
+                                            <th>{% trans "Sueño" %}</th>
+                                            <th>{% trans "Actividad" %}</th>
+                                            <th>{% trans "Estado" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for registro in registros|slice:":20" %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ registro.fecha|date:"d/m/Y" }}</strong><br>
+                                                <small class="text-muted">{{ registro.fecha|date:"H:i" }}</small>
+                                            </div>
+                                            <td>
+                                                <span class="badge {% if registro.frecuencia_cardiaca < 60 %}bg-info{% elif registro.frecuencia_cardiaca <= 100 %}bg-success{% elif registro.frecuencia_cardiaca <= 120 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ registro.frecuencia_cardiaca }}
+                                                </span>
+                                            </div>
+                                            <td>
+                                                <span class="badge {% if registro.presion_arterial_sistolica < 120 %}bg-success{% elif registro.presion_arterial_sistolica < 130 %}bg-warning{% elif registro.presion_arterial_sistolica < 140 %}bg-orange{% else %}bg-danger{% endif %}">
+                                                    {{ registro.presion_arterial_sistolica }}/{{ registro.presion_arterial_diastolica }}
+                                                </span>
+                                            </div>
+                                            <td>
+                                                <span class="badge {% if registro.temperatura < 36.0 %}bg-info{% elif registro.temperatura <= 37.5 %}bg-success{% elif registro.temperatura <= 38.0 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ registro.temperatura }}°C
+                                                </span>
+                                            </div>
+                                            <td>
+                                                <span class="badge {% if registro.oxigenacion_sangre < 90 %}bg-danger{% elif registro.oxigenacion_sangre < 95 %}bg-warning{% else %}bg-success{% endif %}">
+                                                    {{ registro.oxigenacion_sangre }}%
+                                                </span>
+                                            </div>
+                                            <td>
+                                                <strong>{{ registro.horas_sueno|default:"—" }}h</strong>
+                                            </div>
+                                            <td>
+                                                <div class="small">
+                                                    <i class="bi bi-footsteps text-success"></i> {{ registro.pasos_diarios|default:0 }}<br>
+                                                    <i class="bi bi-fire text-danger"></i> {{ registro.calorias_quemadas|default:0 }}
+                                                </div>
+                                            </div>
+                                            <td>
+                                                {% if registro.frecuencia_cardiaca >= 60 and registro.frecuencia_cardiaca <= 100 and registro.presion_arterial_sistolica <= 120 and registro.presion_arterial_diastolica <= 80 and registro.temperatura >= 36.0 and registro.temperatura <= 37.5 and registro.oxigenacion_sangre >= 95 %}
+                                                    <span class="badge bg-success">{% trans "Óptimo" %}</span>
+                                                {% elif registro.frecuencia_cardiaca < 60 or registro.frecuencia_cardiaca > 100 or registro.presion_arterial_sistolica > 140 or registro.presion_arterial_diastolica > 90 %}
+                                                    <span class="badge bg-danger">{% trans "Alerta" %}</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">{% trans "Regular" %}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjetas de promedios -->
+            <div class="row mt-4">
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-light border-0 rounded-4">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-clipboard-data text-primary me-2"></i>{% trans "Promedios" %}</h5>
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <div class="small text-muted">{% trans "FC" %}</div>
+                                    <div class="h5 text-danger">{{ promedios.frecuencia_cardiaca|default:"—"|floatformat:0 }}</div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="small text-muted">{% trans "Temp" %}</div>
+                                    <div class="h5 text-warning">{{ promedios.temperatura|default:"—"|floatformat:1 }}</div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="small text-muted">{% trans "SpO2" %}</div>
+                                    <div class="h5 text-info">{{ promedios.oxigenacion|default:"—"|floatformat:0 }}</div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="small text-muted">{% trans "Estrés" %}</div>
+                                    <div class="h5 text-secondary">{{ promedios.nivel_estres|default:"—"|floatformat:0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-light border-0 rounded-4">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-activity text-success me-2"></i>{% trans "Actividad" %}</h5>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="small text-muted">{% trans "Pasos" %}</div>
+                                    <div class="h5 text-success">{{ promedios.pasos_diarios|default:"0"|floatformat:0 }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted">{% trans "Calorías" %}</div>
+                                    <div class="h5 text-danger">{{ promedios.calorias_quemadas|default:"0"|floatformat:0 }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted">{% trans "Sueño" %}</div>
+                                    <div class="h5 text-secondary">{{ promedios.horas_sueno|default:"0"|floatformat:1 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- Mensaje cuando no hay registros -->
+            <div class="text-center py-5">
+                <i class="bi bi-heart-pulse display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">{% trans "No hay registros fisiológicos aún" %}</h4>
+                <p class="text-muted mb-4">{% trans "Comienza tu seguimiento registrando tus signos vitales" %}</p>
+                <a href="{% url 'PWMS:nuevo_registro_fisiologico' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle me-2"></i>{% trans "Crear Primer Registro" %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .welcome-card {
+        background: white;
+        border-radius: 1.25rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05);
+        padding: 1.5rem;
+    }
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .badge {
+        font-size: 0.75em;
+        padding: 4px 10px;
+        border-radius: 2rem;
+    }
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ========== DATOS DESDE DJANGO ==========
+    const fechas = [{% for r in registros|slice:":30" %}'{{ r.fecha|date:"d/m" }}',{% endfor %}];
+    const fcValues = [{% for r in registros|slice:":30" %}{{ r.frecuencia_cardiaca }},{% endfor %}];
+    const sistolicaValues = [{% for r in registros|slice:":30" %}{{ r.presion_arterial_sistolica }},{% endfor %}];
+    const diastolicaValues = [{% for r in registros|slice:":30" %}{{ r.presion_arterial_diastolica }},{% endfor %}];
+    const tempValues = [{% for r in registros|slice:":30" %}{{ r.temperatura }},{% endfor %}];
+    const spo2Values = [{% for r in registros|slice:":30" %}{{ r.oxigenacion_sangre }},{% endfor %}];
+    const estresValues = [{% for r in registros|slice:":30" %}{{ r.nivel_estres|default:0 }},{% endfor %}];
+    const suenoValues = [{% for r in registros|slice:":30" %}{{ r.horas_sueno|default:0 }},{% endfor %}];
+    const pasosValues = [{% for r in registros|slice:":30" %}{{ r.pasos_diarios }},{% endfor %}];
+
+    // ========== FUNCIONES DE COLOR ==========
+    
+    function getColorFC(valor) {
+        if (valor < 60) return '#0dcaf0';
+        if (valor <= 100) return '#198754';
+        if (valor <= 120) return '#ffc107';
+        return '#dc3545';
+    }
+    
+    function getAreaColorFC(valor) {
+        if (valor < 60) return 'rgba(13, 202, 240, 0.2)';
+        if (valor <= 100) return 'rgba(25, 135, 84, 0.2)';
+        if (valor <= 120) return 'rgba(255, 193, 7, 0.2)';
+        return 'rgba(220, 53, 69, 0.2)';
+    }
+
+    function getColorTemp(valor) {
+        if (valor < 36.0) return '#0dcaf0';
+        if (valor <= 37.5) return '#198754';
+        if (valor <= 38.0) return '#ffc107';
+        return '#dc3545';
+    }
+    
+    function getAreaColorTemp(valor) {
+        if (valor < 36.0) return 'rgba(13, 202, 240, 0.2)';
+        if (valor <= 37.5) return 'rgba(25, 135, 84, 0.2)';
+        if (valor <= 38.0) return 'rgba(255, 193, 7, 0.2)';
+        return 'rgba(220, 53, 69, 0.2)';
+    }
+
+    function getColorSpO2(valor) {
+        if (valor < 90) return '#dc3545';
+        if (valor < 95) return '#ffc107';
+        return '#198754';
+    }
+    
+    function getAreaColorSpO2(valor) {
+        if (valor < 90) return 'rgba(220, 53, 69, 0.2)';
+        if (valor < 95) return 'rgba(255, 193, 7, 0.2)';
+        return 'rgba(25, 135, 84, 0.2)';
+    }
+
+    function getColorEstres(valor) {
+        if (valor <= 25) return '#0dcaf0';
+        if (valor <= 50) return '#198754';
+        if (valor <= 75) return '#ffc107';
+        return '#dc3545';
+    }
+    
+    function getAreaColorEstres(valor) {
+        if (valor <= 25) return 'rgba(13, 202, 240, 0.2)';
+        if (valor <= 50) return 'rgba(25, 135, 84, 0.2)';
+        if (valor <= 75) return 'rgba(255, 193, 7, 0.2)';
+        return 'rgba(220, 53, 69, 0.2)';
+    }
+
+    function getColorSueno(valor) {
+        if (valor < 6) return '#dc3545';
+        if (valor <= 8) return '#198754';
+        return '#ffc107';
+    }
+    
+    function getAreaColorSueno(valor) {
+        if (valor < 6) return 'rgba(220, 53, 69, 0.2)';
+        if (valor <= 8) return 'rgba(25, 135, 84, 0.2)';
+        return 'rgba(255, 193, 7, 0.2)';
+    }
+
+    function getColorPasos(valor) {
+        if (valor < 5000) return '#dc3545';
+        if (valor < 7500) return '#ffc107';
+        if (valor < 10000) return '#198754';
+        return '#0dcaf0';
+    }
+    
+    function getAreaColorPasos(valor) {
+        if (valor < 5000) return 'rgba(220, 53, 69, 0.2)';
+        if (valor < 7500) return 'rgba(255, 193, 7, 0.2)';
+        if (valor < 10000) return 'rgba(25, 135, 84, 0.2)';
+        return 'rgba(13, 202, 240, 0.2)';
+    }
+
+    function crearGrafica(elementId, valores, getColor, getAreaColor, label, unidad, yMax = null) {
+        const canvas = document.getElementById(elementId);
+        if (!canvas || !valores.length) return;
+        
+        const ultimoValor = valores[valores.length - 1];
+        const coloresPuntos = valores.map(v => getColor(v));
+        const areaColor = getAreaColor(ultimoValor);
+        
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: fechas,
+                datasets: [{
+                    label: label,
+                    data: valores,
+                    borderColor: '#0dcaf0',
+                    backgroundColor: areaColor,
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: coloresPuntos,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${label}: ${context.raw} ${unidad}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: yMax === null ? true : false,
+                        max: yMax,
+                        title: { display: true, text: unidad }
+                    },
+                    x: { title: { display: true, text: '{% trans "Fecha" %}' } }
+                }
+            }
+        });
+    }
+
+    if (fechas.length > 0) {
+        crearGrafica('chartFC', fcValues, getColorFC, getAreaColorFC, '{% trans "Frecuencia Cardíaca" %}', 'lpm', 200);
+        crearGrafica('chartTemp', tempValues, getColorTemp, getAreaColorTemp, '{% trans "Temperatura" %}', '°C', 42);
+        crearGrafica('chartSpO2', spo2Values, getColorSpO2, getAreaColorSpO2, '{% trans "Oxigenación" %}', '%', 100);
+        crearGrafica('chartEstres', estresValues, getColorEstres, getAreaColorEstres, '{% trans "Nivel de Estrés" %}', 'pts', 100);
+        crearGrafica('chartSueno', suenoValues, getColorSueno, getAreaColorSueno, '{% trans "Horas de Sueño" %}', 'horas', 12);
+        crearGrafica('chartPasos', pasosValues, getColorPasos, getAreaColorPasos, '{% trans "Pasos Diarios" %}', 'pasos', null);
+        
+        // Gráfica especial de Presión
+        if (sistolicaValues.length > 0) {
+            new Chart(document.getElementById('chartPresion'), {
+                type: 'line',
+                data: {
+                    labels: fechas,
+                    datasets: [
+                        {
+                            label: '{% trans "Presión Sistólica" %}',
+                            data: sistolicaValues,
+                            borderColor: '#dc3545',
+                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                            borderWidth: 2.5,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: sistolicaValues.map(v => v >= 140 ? '#dc3545' : v >= 130 ? '#fd7e14' : v >= 120 ? '#ffc107' : '#198754'),
+                            pointBorderColor: '#fff',
+                            tension: 0.3,
+                            fill: false
+                        },
+                        {
+                            label: '{% trans "Presión Diastólica" %}',
+                            data: diastolicaValues,
+                            borderColor: '#0dcaf0',
+                            backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                            borderWidth: 2.5,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: diastolicaValues.map(v => v >= 90 ? '#dc3545' : v >= 85 ? '#fd7e14' : v >= 80 ? '#ffc107' : '#198754'),
+                            pointBorderColor: '#fff',
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} mmHg`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 200, title: { display: true, text: 'mmHg' } },
+                        x: { title: { display: true, text: '{% trans "Fecha" %}' } }
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
