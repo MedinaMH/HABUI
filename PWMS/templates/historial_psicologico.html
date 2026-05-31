@@ -1,0 +1,367 @@
+{% extends 'estructura_base_PWMS.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Historial Psicológico" %} - PWMS{% endblock %}
+
+{% block contenido %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<div class="container-fluid px-4">
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h2 class="mb-3"><i class="bi bi-bar-chart-steps me-2"></i> {% trans "Historial Psicológico" %}</h2>
+                    <p class="text-muted mb-4">{% trans "Visualiza tu evolución en carga de trabajo y ansiedad." %}</p>
+
+                    <!-- ============================================ -->
+                    <!-- MÉTRICAS DINÁMICAS -->
+                    <!-- ============================================ -->
+                    <div class="row g-3 mb-5">
+                        <!-- Total NASA TLX -->
+                        <div class="col-md-3">
+                            <div class="card text-white bg-primary h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-bar-chart-steps fs-1"></i>
+                                    <h2 class="display-6 fw-bold mt-2">{{ total_nasa|default:"0" }}</h2>
+                                    <p class="mb-0 small">{% trans "Evaluaciones NASA TLX" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Total Zung -->
+                        <div class="col-md-3">
+                            <div class="card text-white bg-danger h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-clipboard-heart fs-1"></i>
+                                    <h2 class="display-6 fw-bold mt-2">{{ total_zung|default:"0" }}</h2>
+                                    <p class="mb-0 small">{% trans "Evaluaciones Zung" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Carga Mental Promedio -->
+                        <div class="col-md-3">
+                            <div class="card text-white bg-warning h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-brain fs-1"></i>
+                                    <h2 class="display-6 fw-bold mt-2">{{ promedio_carga|floatformat:1|default:"0" }}</h2>
+                                    <p class="mb-0 small">{% trans "Carga de trabajo promedio" %}</p>
+                                    <small class="opacity-75">{% trans "NASA TLX" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ansiedad Promedio -->
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-activity fs-1"></i>
+                                    <h2 class="display-6 fw-bold mt-2">{{ promedio_ansiedad|floatformat:1|default:"0" }}</h2>
+                                    <p class="mb-0 small">{% trans "Ansiedad promedio" %}</p>
+                                    <small class="opacity-75">{% trans "Zung" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- GRÁFICAS GRANDES -->
+                    <!-- ============================================ -->
+                    <div class="row g-4 mb-5">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0"><i class="bi bi-brain me-2 text-info"></i> {% trans "NASA TLX - Evolución de la carga de trabajo" %}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div style="position: relative; height: 450px;">
+                                        <canvas id="nasaChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0"><i class="bi bi-clipboard-heart me-2 text-danger"></i> {% trans "Zung - Evolución del índice de ansiedad" %}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div style="position: relative; height: 450px;">
+                                        <canvas id="zungChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- TABLA NASA TLX -->
+                    <!-- ============================================ -->
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">{% trans "Evaluaciones NASA TLX" %}</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if evaluaciones_nasa %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>{% trans "Fecha" %}</th>
+                                                    <th>{% trans "Tarea" %}</th>
+                                                    <th>{% trans "Puntuación" %}</th>
+                                                    <th>{% trans "Nivel" %}</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for e in evaluaciones_nasa %}
+                                                <tr>
+                                                    <td>{{ e.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                                    <td>{{ e.tarea_descripcion|truncatechars:50 }}</td>
+                                                    <td>
+                                                        <span class="badge 
+                                                            {% if e.puntuacion_total <= 30 %}bg-success
+                                                            {% elif e.puntuacion_total <= 60 %}bg-warning
+                                                            {% elif e.puntuacion_total <= 79 %}bg-danger
+                                                            {% else %}bg-dark{% endif %}">
+                                                            {{ e.puntuacion_total|floatformat:1 }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if e.puntuacion_total <= 30 %}
+                                                            <span class="text-success fw-bold">{% trans "BAJA" %}</span>
+                                                        {% elif e.puntuacion_total <= 60 %}
+                                                            <span class="text-warning fw-bold">{% trans "MODERADA" %}</span>
+                                                        {% elif e.puntuacion_total <= 79 %}
+                                                            <span class="text-danger fw-bold">{% trans "ALTA" %}</span>
+                                                        {% else %}
+                                                            <span class="text-dark fw-bold">{% trans "EXTREMA" %}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'PWMS:nasa_tlx_resultado' e.id %}" class="btn btn-sm btn-outline-info">
+                                                            <i class="bi bi-eye"></i> {% trans "Ver" %}
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-clipboard-x display-4 text-muted"></i>
+                                        <p class="mt-2">{% trans "No hay evaluaciones NASA registradas" %}</p>
+                                        <a href="{% url 'PWMS:nasa_tlx_create' %}" class="btn btn-primary">{% trans "Crear evaluación" %}</a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============================================ -->
+                        <!-- TABLA ZUNG -->
+                        <!-- ============================================ -->
+                        <div class="col-12 mt-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">{% trans "Escala de Ansiedad de Zung" %}</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if pruebas_zung %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>{% trans "Fecha" %}</th>
+                                                    <th>{% trans "Índice" %}</th>
+                                                    <th>{% trans "Nivel" %}</th>
+                                                    <th>{% trans "Observaciones" %}</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for p in pruebas_zung %}
+                                                <tr>
+                                                    <td>{{ p.fecha_registro|date:"d/m/Y H:i" }}</td>
+                                                    <td>
+                                                        <span class="badge 
+                                                            {% if p.puntuacion_indice <= 44 %}bg-success
+                                                            {% elif p.puntuacion_indice <= 59 %}bg-warning
+                                                            {% elif p.puntuacion_indice <= 74 %}bg-danger
+                                                            {% else %}bg-dark{% endif %}">
+                                                            {{ p.puntuacion_indice }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if p.nivel_ansiedad == 'normal' %}
+                                                            <span class="text-success fw-bold">{% trans "Normal" %}</span>
+                                                        {% elif p.nivel_ansiedad == 'minima' %}
+                                                            <span class="text-warning fw-bold">{% trans "Mínima" %}</span>
+                                                        {% elif p.nivel_ansiedad == 'marcada' %}
+                                                            <span class="text-danger fw-bold">{% trans "Marcada" %}</span>
+                                                        {% else %}
+                                                            <span class="text-dark fw-bold">{% trans "Extrema" %}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ p.observaciones|truncatechars:50 }}</td>
+                                                    <td>
+                                                        <a href="{% url 'PWMS:zung_anxiety_resultados' p.id %}" class="btn btn-sm btn-outline-danger">
+                                                            <i class="bi bi-eye"></i> {% trans "Ver" %}
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-clipboard-x display-4 text-muted"></i>
+                                        <p class="mt-2">{% trans "No hay evaluaciones Zung registradas" %}</p>
+                                        <a href="{% url 'PWMS:zung_anxiety_nuevo' %}" class="btn btn-danger">{% trans "Crear evaluación" %}</a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================================
+    // TEXTOS TRADUCIDOS PARA JAVASCRIPT
+    // ============================================
+    const nasaLabel = "{% trans 'Carga Mental (NASA TLX)' %}";
+    const zungLabel = "{% trans 'Índice de Ansiedad (Zung)' %}";
+    const tlxYTitle = "{% trans 'Puntuación TLX (0-100)' %}";
+    const zungYTitle = "{% trans 'Índice Zung (25-100)' %}";
+    const xTitle = "{% trans 'Fecha' %}";
+    const noDataMsg = "{% trans 'No hay datos suficientes para mostrar la gráfica.' %}";
+    const nasaNoDataMsg = "{% trans 'Completa algunas evaluaciones NASA TLX.' %}";
+    const zungNoDataMsg = "{% trans 'Completa algunas evaluaciones Zung.' %}";
+
+    // ============================================
+    // NASA TLX CHART
+    // ============================================
+    const nasaFechas = [{% for e in evaluaciones_nasa %}"{{ e.fecha_creacion|date:'d/m/Y' }}",{% endfor %}];
+    const nasaPuntos = [{% for e in evaluaciones_nasa %}{{ e.puntuacion_total|floatformat:0 }},{% endfor %}];
+    
+    const nasaCtx = document.getElementById('nasaChart');
+    if (nasaCtx && nasaFechas.length > 0) {
+        new Chart(nasaCtx, {
+            type: 'line',
+            data: {
+                labels: nasaFechas,
+                datasets: [{
+                    label: nasaLabel,
+                    data: nasaPuntos,
+                    borderColor: '#0dcaf0',
+                    backgroundColor: 'rgba(13,202,240,0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    pointBackgroundColor: function(context) {
+                        const value = context.raw;
+                        if (value <= 30) return '#28a745';
+                        if (value <= 60) return '#fd7e14';
+                        if (value <= 79) return '#dc3545';
+                        return '#6c757d';
+                    },
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        title: { display: true, text: tlxYTitle, font: { weight: 'bold' } }
+                    },
+                    x: {
+                        title: { display: true, text: xTitle, font: { weight: 'bold' } }
+                    }
+                }
+            }
+        });
+    } else if (nasaCtx) {
+        nasaCtx.parentElement.innerHTML = '<div class="text-center text-muted py-5">' + noDataMsg + ' ' + nasaNoDataMsg + '</div>';
+    }
+
+    // ============================================
+    // ZUNG CHART
+    // ============================================
+    const zungFechas = [{% for p in pruebas_zung %}"{{ p.fecha_registro|date:'d/m/Y' }}",{% endfor %}];
+    const zungPuntos = [{% for p in pruebas_zung %}{{ p.puntuacion_indice }},{% endfor %}];
+    
+    const zungCtx = document.getElementById('zungChart');
+    if (zungCtx && zungFechas.length > 0) {
+        new Chart(zungCtx, {
+            type: 'line',
+            data: {
+                labels: zungFechas,
+                datasets: [{
+                    label: zungLabel,
+                    data: zungPuntos,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220,53,69,0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    pointBackgroundColor: function(context) {
+                        const value = context.raw;
+                        if (value <= 44) return '#28a745';
+                        if (value <= 59) return '#84c44a';
+                        if (value <= 74) return '#dc3545';
+                        return '#6c757d';
+                    },
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: {
+                        min: 25,
+                        max: 100,
+                        title: { display: true, text: zungYTitle, font: { weight: 'bold' } }
+                    },
+                    x: {
+                        title: { display: true, text: xTitle, font: { weight: 'bold' } }
+                    }
+                }
+            }
+        });
+    } else if (zungCtx) {
+        zungCtx.parentElement.innerHTML = '<div class="text-center text-muted py-5">' + noDataMsg + ' ' + zungNoDataMsg + '</div>';
+    }
+});
+</script>
+{% endblock %}

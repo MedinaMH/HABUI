@@ -303,13 +303,13 @@ def nasa_tlx_create(request):
 
             evaluacion.save()
             messages.success(request, 'Evaluación NASA-TLX guardada correctamente')
-            return redirect('PWMS:nasa_tlx_resultado', pk=evaluacion.pk)
+            return redirect('nasa_tlx_resultado', pk=evaluacion.pk)
 
         messages.error(request, 'Error en el formulario')
     else:
         form = NASATLXForm()
 
-    return render(request, 'PWMS:nasa_tlx_form.html', {'form': form})
+    return render(request, 'nasa_tlx_form.html', {'form': form})
 
 
 @login_required
