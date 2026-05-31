@@ -48,13 +48,6 @@
         <div class="position-sticky pt-3">
         <ul class="nav flex-column">
 
-            <!-- Alimentos -->
-            <li class="nav-item">
-            <a class="nav-link {% if request.path == '/control_alimentos' %}active{% endif %}" href="{% url 'control_alimentos' %}">
-                <i class="bi bi-cup-straw me-2"></i>Alimentos
-            </a>
-            </li>
-
             <!-- Energía -->
             <li class="nav-item">
             <a class="nav-link {% if request.path == '/control_sensores' %}active{% endif %}"  href="{% url 'control_sensores' %}">
